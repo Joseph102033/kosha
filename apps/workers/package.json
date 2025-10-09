@@ -1,0 +1,23 @@
+{
+  "name": "safe-ops-studio-workers",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers API for Safe OPS Studio",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": ["cloudflare", "workers", "ops", "safety"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250106.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.18",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.94.0"
+  }
+}

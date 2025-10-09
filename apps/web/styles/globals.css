@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print styles for A4 PDF generation */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+  }
+
+  /* Hide non-essential elements */
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* Prevent orphans and widows */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Convert background colors to borders for better print */
+  .print\\:bg-white {
+    background-color: white !important;
+  }
+
+  .print\\:text-black {
+    color: black !important;
+  }
+
+  .print\\:border {
+    border: 1px solid #e5e7eb !important;
+  }
+
+  /* Ensure links are visible */
+  a {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  /* Optimize spacing */
+  .print\\:text-gray-600 {
+    color: #4b5563 !important;
+  }
+}

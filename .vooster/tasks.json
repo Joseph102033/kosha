@@ -1,0 +1,96 @@
+{
+  "totalCount": 9,
+  "downloadedAt": "2025-10-08T11:35:06.748Z",
+  "tasks": [
+    {
+      "taskId": "T-001",
+      "summary": "Set up project infrastructure and development environment",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 6,
+      "urgency": 9,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-002",
+      "summary": "Implement Landing Page with Email Subscription",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 5,
+      "urgency": 8,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-003",
+      "summary": "Develop OPS Builder Input Form and Live Preview",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 7,
+      "urgency": 9,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-004",
+      "summary": "Build Law Rules Engine with Editable Ruleset",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 7,
+      "urgency": 8,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-005",
+      "summary": "Create OPS Persistence and Public OPS Page Rendering",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 7,
+      "urgency": 9,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-006",
+      "summary": "Implement Client-Side PDF Generation",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 6,
+      "urgency": 7,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-007",
+      "summary": "Integrate Email Sending with Delivery Logging",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 7,
+      "urgency": 8,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-008",
+      "summary": "Implement Admin Publishing Flow and Access Control",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 6,
+      "urgency": 8,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    },
+    {
+      "taskId": "T-009",
+      "summary": "Test Coverage: Unit, Integration, and E2E Tests",
+      "status": "BACKLOG",
+      "importance": "MUST",
+      "complexity": 8,
+      "urgency": 8,
+      "createdAt": "2025-10-08T11:05:47.323Z",
+      "updatedAt": "2025-10-08T11:05:47.323Z"
+    }
+  ]
+}

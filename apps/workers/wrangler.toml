@@ -1,0 +1,24 @@
+name = "safe-ops-studio-workers"
+main = "src/index.ts"
+compatibility_date = "2024-10-08"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "safe-ops-studio-db"
+database_id = "4409b768-3430-4d91-8665-391c977897c7"
+
+# KV Namespace binding
+[[kv_namespaces]]
+binding = "OPS_CACHE"
+id = "03757fc4bf2e4a0e99ee6cc7eb5fa1ad"
+
+# Environment variables (secrets should be set via: wrangler secret put <KEY>)
+[vars]
+# These are non-sensitive variables
+ENVIRONMENT = "development"
+
+# For production secrets, use:
+# wrangler secret put ACCESS_KEY
+# wrangler secret put EMAIL_API_KEY

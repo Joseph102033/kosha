@@ -1,0 +1,27 @@
+# Build Law Rules Engine with Editable Ruleset
+
+**Task ID:** T-004
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 7/10
+**Urgency:** 8/10
+**Dependencies:** T-001
+
+## Description
+
+### Requirements
+- Keyword-based rules engine suggests law references based on incident type and objects
+- Admin CRUD operations on ruleset stored in D1, no duplicate suggestions
+- Manual add/remove suggestions before publish
+### Implementation Details
+- Backend: implement Worker handlers in src/law/rules.ts for CRUD (POST, GET, PUT, DELETE) against D1 'law_rules' table; engine logic performs parameterized SQL keyword matching and deduplication via Set
+- Frontend: add Laws tab in admin builder using shadcn/ui Table and Form components; fetch and mutate rules via Workers API; reflect suggestions in generate response
+- Cache: optionally cache ruleset in KV or in-memory in Worker for performance, invalidate on CRUD operations
+### Test Strategy
+- Unit tests for rules engine: given keywords, returns unique law links
+- Integration tests for CRUD endpoints: create, update, delete rules persist in D1 and reflect in GET
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

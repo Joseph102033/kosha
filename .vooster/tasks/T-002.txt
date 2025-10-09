@@ -1,0 +1,26 @@
+# Implement Landing Page with Email Subscription
+
+**Task ID:** T-002
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 5/10
+**Urgency:** 8/10
+**Dependencies:** T-001
+
+## Description
+
+### Requirements
+- Public landing page with headline, single email subscription form, latest 3 OPS cards
+- Backend POST /api/subscribe to accept, validate email, prevent duplicates, return confirmation
+### Implementation Details
+- Frontend: create pages/index.tsx in Next.js, use shadcn/ui Input and Button components, fetch via Next.js API routes or directly to Worker endpoint
+- Backend: implement Cloudflare Worker handler at src/subscriptions/subscribe.ts; use D1 table 'subscribers' with unique email constraint; validate input via Zod; update status to active
+- CI: bind Worker route /api/subscribe in wrangler.toml and test via Miniflare in CI
+### Test Strategy
+- Unit tests for subscribe handler: valid email succeeds, invalid email fails, duplicate returns idempotent success
+- Integration test: simulate form submission in Next.js, assert UI shows “Subscribed” and no duplicate entry
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

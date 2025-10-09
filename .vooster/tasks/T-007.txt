@@ -1,0 +1,25 @@
+# Integrate Email Sending with Delivery Logging
+
+**Task ID:** T-007
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 7/10
+**Urgency:** 8/10
+**Dependencies:** T-001, T-005
+
+## Description
+
+### Requirements
+- Backend POST /api/send to send link-only email to multiple recipients, fan-out logic
+- Store delivery status logs in D1 'deliveries' with provider_msg_id and status
+### Implementation Details
+- Worker handler in src/delivery/send.ts: accept ops_id and to[]; for each recipient call REST email API (Resend or Mailgun) using environment secret; implement retry logic; insert into D1 'deliveries' table with queued/sent/failed and timestamp
+- Frontend: extend publish modal in admin UI to select recipients (typed or subscriber list) and trigger send endpoint; show loading and result status
+### Test Strategy
+- Unit tests: mock email API responses for success and failure, assert correct D1 inserts and status updates
+- Integration tests: call send API, verify D1 'deliveries' records exist with expected fields
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

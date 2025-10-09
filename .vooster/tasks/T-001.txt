@@ -1,0 +1,28 @@
+# Set up project infrastructure and development environment
+
+**Task ID:** T-001
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 6/10
+**Urgency:** 9/10
+**Dependencies:** None
+
+## Description
+
+### Requirements
+- Initialize Next.js project with Tailwind CSS and shadcn/ui for UI
+- Configure Cloudflare Workers with D1 and KV data storage
+- Establish GitHub Actions CI/CD pipelines with Wrangler integration
+### Implementation Details
+- Adopt monorepo with apps/web (Next.js) and apps/workers (Workers) per TRD file structure
+- Use create-next-app, install Tailwind CSS and shadcn/ui components
+- Configure wrangler.toml: bind D1 database, KV namespaces, environment secrets for email API and access keys
+- Define GitHub Actions workflows: run Jest + Miniflare tests, deploy Cloudflare Pages and Workers via Wrangler CLI on merge
+### Test Strategy
+- Validate local development: Next.js dev server starts, Workers serve endpoints in Miniflare emulation
+- CI pipeline runs unit and integration tests successfully and completes deployment steps
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

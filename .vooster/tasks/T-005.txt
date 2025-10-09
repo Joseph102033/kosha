@@ -1,0 +1,26 @@
+# Create OPS Persistence and Public OPS Page Rendering
+
+**Task ID:** T-005
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 7/10
+**Urgency:** 9/10
+**Dependencies:** T-001, T-003
+
+## Description
+
+### Requirements
+- API POST /api/ops/save to persist ops_json draft, return id and public_url slug
+- Public read-only page at /p/:slug rendering ops_json via SSR/SSG with KV cache
+### Implementation Details
+- Backend: Worker handler in src/ops/save.ts to insert into D1 'ops_documents', generate nanoID slug, store ops_json in KV under slug key; mark status published or draft
+- Frontend: add pages/p/[slug].tsx in Next.js using getStaticPaths and getStaticProps; fetch ops_json from KV via Worker endpoint or direct binding; render sections using shared OPSPreview component
+- Cache: set KV cache TTL infinite; fallback to D1 if cache miss and repopulate KV
+### Test Strategy
+- Integration tests: POST save returns slug, assert record in D1 and KV entry exists
+- E2E: publish OPS in admin, navigate to public URL, verify all sections render read-only
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

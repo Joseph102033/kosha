@@ -1,0 +1,26 @@
+# Implement Client-Side PDF Generation
+
+**Task ID:** T-006
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 6/10
+**Urgency:** 7/10
+**Dependencies:** T-005
+
+## Description
+
+### Requirements
+- Download PDF button on public OPS page that generates single-page A4 PDF locally
+- Embedded fonts and layout consistency, generation within 5 seconds on common devices
+### Implementation Details
+- Add html2pdf.js library to web project; create PdfButton component that wraps html2pdf invocation with options for A4 size, margins, and embedded font subset
+- Define print CSS in global styles: @media print rules matching screen layout for A4; include system font fallback and small open font subset via @font-face
+- Ensure mobile optimization by limiting DOM complexity and image size in illustration placeholder
+### Test Strategy
+- Unit test PdfButton click handler triggers html2pdf call
+- Performance test in browser automation: measure PDF generation time, assert ≤5s on emulated mobile
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

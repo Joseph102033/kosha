@@ -1,0 +1,26 @@
+# Develop OPS Builder Input Form and Live Preview
+
+**Task ID:** T-003
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 7/10
+**Urgency:** 9/10
+**Dependencies:** T-001
+
+## Description
+
+### Requirements
+- Admin OPS builder UI with fields: date/time, location, agent object, hazard object, incident type, free-text cause
+- Real-time preview rendering summary, direct/indirect causes, checklist, laws, placeholder illustration
+### Implementation Details
+- Frontend: add /admin or /builder page in Next.js; use shadcn/ui Form, Tabs, and components in apps/web/components/ops; manage form state in React with debounced effect to fetch draft
+- API: POST /api/ops/generate in Worker at src/ops/generate.ts; returns draft ops_json based on rules engine and optional AI fallback
+- Preview: render draft JSON via shared OPSPreview component, design layout matching public page styling
+### Test Strategy
+- Unit tests for form components and preview rendering logic
+- Integration: mock generate API to return sample ops_json, assert UI updates live on input changes
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

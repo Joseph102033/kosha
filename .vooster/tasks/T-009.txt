@@ -1,0 +1,27 @@
+# Test Coverage: Unit, Integration, and E2E Tests
+
+**Task ID:** T-009
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 8/10
+**Urgency:** 8/10
+**Dependencies:** T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008
+
+## Description
+
+### Requirements
+- Comprehensive tests for rules engine, OPS composer, subscription and send APIs, UI flows (landing, builder, public page), PDF generation and email sending
+- Integrate tests into CI pipeline
+### Implementation Details
+- Configure Jest with Miniflare for Worker unit and integration tests in apps/workers/tests; use D1 and KV mocks; write tests for each domain (subscription, ops, law, delivery)
+- Setup Playwright in apps/web/tests for E2E: landing subscription, admin create→preview→publish, public page view and PDF download, email send flow
+- Add test steps to GitHub Actions: run Jest then Playwright with headless browsers on PRs and merges
+### Test Strategy
+- Unit: functions and service layers achieve 100% coverage for key logic (rules engine, composer)
+- Integration: simulate Worker endpoints with D1 and KV to validate persistence and API behavior
+- E2E: real browser flows pass on Chrome, Firefox, Safari emulation
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z

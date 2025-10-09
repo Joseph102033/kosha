@@ -1,0 +1,26 @@
+# Implement Admin Publishing Flow and Access Control
+
+**Task ID:** T-008
+**Status:** BACKLOG
+**Importance:** MUST
+**Complexity:** 6/10
+**Urgency:** 8/10
+**Dependencies:** T-003, T-004, T-005
+
+## Description
+
+### Requirements
+- Admin workflow: review OPS draft, mark as Reviewed, publish to generate public URL
+- Protect admin APIs via simple access key or magic link authentication
+### Implementation Details
+- Frontend: add Reviewed checkbox and Publish button in admin builder UI; manage auth state via access key stored in local storage or magic link flow (/api/auth/magic-link and /api/auth/verify endpoints in Workers)
+- Backend: Worker handler in src/ops/publish.ts: validate X-Access-Key header against env secret, verify reviewed flag, update D1 record status, write ops_json to KV under slug, return public_url
+- Protect all admin endpoints by verifying access key header middleware in Worker entry point
+### Test Strategy
+- Integration tests: publish endpoint rejects requests without valid key or reviewed=false; succeeds otherwise and KV entry is created
+- E2E: admin logs in via magic link or access key, reviews ops, publishes, and can access public URL
+
+---
+
+**Created:** 2025-10-08T11:05:47.323Z
+**Updated:** 2025-10-08T11:05:47.323Z
