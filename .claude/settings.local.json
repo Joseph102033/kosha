@@ -23,7 +23,12 @@
       "Bash(kill:*)",
       "Bash(npx wrangler d1 migrations apply:*)",
       "Bash(curl -s -X POST http://localhost:8787/api/ops/generate -H \"Content-Type: application/json\" -d '{\"\"incidentDate\"\":\"\"2025-01-15T10:00:00\"\",\"\"location\"\":\"\"Seoul Construction Site\"\",\"\"incidentType\"\":\"\"Fall\"\",\"\"incidentCause\"\":\"\"Worker fell from 3rd floor due to missing safety harness\"\"}')",
-      "mcp__vooster-ai__read_task"
+      "mcp__vooster-ai__read_task",
+      "mcp__vooster-ai__list_task",
+      "Read(//c/Users/s/**)",
+      "Bash(curl:*)",
+      "Bash(https://api.github.com/repos/Joseph102033/kosha )",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
