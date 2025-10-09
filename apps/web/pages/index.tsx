@@ -32,7 +32,7 @@ export default function Home() {
               <p className="text-gray-600 mb-6">
                 Get the latest OPS briefs and safety insights delivered to your inbox
               </p>
-              <SubscriptionForm workerUrl="/api/subscribe" />
+              <SubscriptionForm />
             </div>
 
             {/* Features Grid */}

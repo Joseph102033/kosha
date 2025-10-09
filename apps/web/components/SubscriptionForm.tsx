@@ -10,7 +10,7 @@
 
 import { useState, FormEvent } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safe-ops-studio-workers.yosep102033.workers.dev';
 
 interface SubscriptionFormProps {
   workerUrl?: string; // Cloudflare Worker URL (default: /api/subscribe)
