@@ -179,7 +179,7 @@ export default function Builder() {
   return (
     <>
       <Head>
-        <title>OPS Builder | Safe OPS Studio</title>
+        <title>OPS 작성 도구 | 안전 OPS 뉴스레터</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -188,14 +188,14 @@ export default function Builder() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">OPS Builder</h1>
-                <p className="text-sm text-gray-600 mt-1">Create operational safety briefs from incident data</p>
+                <h1 className="text-2xl font-bold text-gray-900">OPS 작성 도구</h1>
+                <p className="text-sm text-gray-600 mt-1">재해 정보를 입력하여 OPS 자료를 자동 생성합니다</p>
               </div>
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                {hasAccessKey ? '🔑 Update Key' : '🔑 Enter Access Key'}
+                {hasAccessKey ? '🔑 키 변경' : '🔑 액세스 키 입력'}
               </button>
             </div>
           </div>
@@ -206,20 +206,20 @@ export default function Builder() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left: Input Form */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Incident Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">재해 정보 입력</h2>
 
               <form className="space-y-4">
                 {/* Title */}
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                    Document Title <span className="text-red-500">*</span>
+                    OPS 제목 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="e.g., Fall from Scaffolding - January 2025"
+                    placeholder="예: 비계 추락사고 - 2025년 1월"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
@@ -228,7 +228,7 @@ export default function Builder() {
                 {/* Incident Date */}
                 <div>
                   <label htmlFor="incidentDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Incident Date & Time <span className="text-red-500">*</span>
+                    재해 발생 일시 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -243,14 +243,14 @@ export default function Builder() {
                 {/* Location */}
                 <div>
                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                    Location <span className="text-red-500">*</span>
+                    재해 발생 장소 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="e.g., Seoul Construction Site, Building A"
+                    placeholder="예: 서울 건설현장 A동"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
@@ -259,14 +259,14 @@ export default function Builder() {
                 {/* Agent Object (Optional) */}
                 <div>
                   <label htmlFor="agentObject" className="block text-sm font-medium text-gray-700 mb-1">
-                    Agent Object <span className="text-gray-400">(optional)</span>
+                    기인물 <span className="text-gray-400">(선택)</span>
                   </label>
                   <input
                     type="text"
                     id="agentObject"
                     value={formData.agentObject}
                     onChange={(e) => handleInputChange('agentObject', e.target.value)}
-                    placeholder="e.g., Worker, Machine Operator"
+                    placeholder="예: 작업자, 기계 조작자"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -274,14 +274,14 @@ export default function Builder() {
                 {/* Hazard Object (Optional) */}
                 <div>
                   <label htmlFor="hazardObject" className="block text-sm font-medium text-gray-700 mb-1">
-                    Hazard Object <span className="text-gray-400">(optional)</span>
+                    가해물 <span className="text-gray-400">(선택)</span>
                   </label>
                   <input
                     type="text"
                     id="hazardObject"
                     value={formData.hazardObject}
                     onChange={(e) => handleInputChange('hazardObject', e.target.value)}
-                    placeholder="e.g., Scaffolding, Chemical Container"
+                    placeholder="예: 비계, 화학물질 용기"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -289,7 +289,7 @@ export default function Builder() {
                 {/* Incident Type */}
                 <div>
                   <label htmlFor="incidentType" className="block text-sm font-medium text-gray-700 mb-1">
-                    Incident Type <span className="text-red-500">*</span>
+                    재해 발생 형태 <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="incidentType"
@@ -298,26 +298,26 @@ export default function Builder() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
-                    <option value="">Select incident type</option>
-                    <option value="Fall">Fall</option>
-                    <option value="Chemical Spill">Chemical Spill</option>
-                    <option value="Fire">Fire</option>
-                    <option value="Explosion">Explosion</option>
-                    <option value="Equipment Failure">Equipment Failure</option>
-                    <option value="Other">Other</option>
+                    <option value="">재해 유형 선택</option>
+                    <option value="Fall">추락</option>
+                    <option value="Chemical Spill">화학물질 누출</option>
+                    <option value="Fire">화재</option>
+                    <option value="Explosion">폭발</option>
+                    <option value="Equipment Failure">장비 고장</option>
+                    <option value="Other">기타</option>
                   </select>
                 </div>
 
                 {/* Incident Cause */}
                 <div>
                   <label htmlFor="incidentCause" className="block text-sm font-medium text-gray-700 mb-1">
-                    Incident Cause <span className="text-red-500">*</span>
+                    재해 발생 원인 <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="incidentCause"
                     value={formData.incidentCause}
                     onChange={(e) => handleInputChange('incidentCause', e.target.value)}
-                    placeholder="Describe the primary cause of the incident..."
+                    placeholder="재해의 주요 원인을 상세히 기술해 주세요..."
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
@@ -327,13 +327,13 @@ export default function Builder() {
                 {/* Status Indicator */}
                 <div className="flex items-center gap-2 text-sm">
                   {isGenerating && (
-                    <span className="text-blue-600">⏳ Generating preview...</span>
+                    <span className="text-blue-600">⏳ 미리보기 생성 중...</span>
                   )}
                   {error && (
                     <span className="text-red-600">⚠️ {error}</span>
                   )}
                   {preview && !isGenerating && !error && (
-                    <span className="text-green-600">✓ Preview updated</span>
+                    <span className="text-green-600">✓ 미리보기 생성 완료</span>
                   )}
                 </div>
 
@@ -345,7 +345,7 @@ export default function Builder() {
                     disabled={isPublishing || !preview || !formData.title.trim()}
                     className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors"
                   >
-                    {isPublishing ? '📤 Publishing...' : '📤 Publish OPS Document'}
+                    {isPublishing ? '📤 발행 중...' : '📤 OPS 문서 발행'}
                   </button>
                   {publishError && (
                     <p className="text-red-600 text-sm mt-2">⚠️ {publishError}</p>
@@ -356,11 +356,11 @@ export default function Builder() {
 
             {/* Right: Live Preview */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Live Preview</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">실시간 미리보기</h2>
 
               {!preview && (
                 <div className="text-center py-12 text-gray-400">
-                  <p>Fill in the form to see a live preview</p>
+                  <p>폼을 작성하면 미리보기가 표시됩니다</p>
                 </div>
               )}
 
@@ -379,7 +379,10 @@ export default function Builder() {
                               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                           }`}
                         >
-                          {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                          {tab === 'summary' && '요약'}
+                          {tab === 'causes' && '원인 분석'}
+                          {tab === 'checklist' && '재발방지 체크리스트'}
+                          {tab === 'laws' && '관련 법령'}
                         </button>
                       ))}
                     </nav>
@@ -389,7 +392,7 @@ export default function Builder() {
                   <div className="prose prose-sm max-w-none">
                     {activeTab === 'summary' && (
                       <div>
-                        <h3 className="text-base font-semibold mb-2">Summary</h3>
+                        <h3 className="text-base font-semibold mb-2">사고 개요</h3>
                         <p className="whitespace-pre-line text-gray-700">{preview.summary}</p>
                       </div>
                     )}
@@ -397,7 +400,7 @@ export default function Builder() {
                     {activeTab === 'causes' && (
                       <div>
                         <div className="mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-2">Direct Causes</h4>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">직접 원인</h4>
                           <ul className="list-disc list-inside space-y-1">
                             {preview.causes.direct.map((cause, idx) => (
                               <li key={idx} className="text-gray-700">{cause}</li>
@@ -405,7 +408,7 @@ export default function Builder() {
                           </ul>
                         </div>
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-900 mb-2">Indirect Causes</h4>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">간접 원인</h4>
                           <ul className="list-disc list-inside space-y-1">
                             {preview.causes.indirect.map((cause, idx) => (
                               <li key={idx} className="text-gray-700">{cause}</li>
@@ -417,7 +420,7 @@ export default function Builder() {
 
                     {activeTab === 'checklist' && (
                       <div>
-                        <h3 className="text-base font-semibold mb-2">Prevention Checklist</h3>
+                        <h3 className="text-base font-semibold mb-2">재발방지 체크리스트</h3>
                         <ul className="space-y-2">
                           {preview.checklist.map((item, idx) => (
                             <li key={idx} className="flex items-start gap-2">
@@ -431,7 +434,7 @@ export default function Builder() {
 
                     {activeTab === 'laws' && (
                       <div>
-                        <h3 className="text-base font-semibold mb-2">Related Laws & Regulations</h3>
+                        <h3 className="text-base font-semibold mb-2">관련 법령 및 규정</h3>
                         <ul className="space-y-2">
                           {preview.laws.map((law, idx) => (
                             <li key={idx} className="border-l-2 border-blue-500 pl-3">
@@ -459,16 +462,16 @@ export default function Builder() {
         {showAuthModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">🔑 Access Key Required</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">🔑 액세스 키 필요</h3>
               <p className="text-gray-600 mb-6">
-                Please enter your access key to use admin features (generate and publish OPS documents).
+                OPS 문서를 생성하고 발행하려면 관리자 액세스 키가 필요합니다.
               </p>
               <input
                 type="password"
                 value={accessKeyInput}
                 onChange={(e) => setAccessKeyInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveAccessKey()}
-                placeholder="Enter your access key"
+                placeholder="액세스 키를 입력하세요"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
                 autoFocus
               />
@@ -478,7 +481,7 @@ export default function Builder() {
                   disabled={!accessKeyInput.trim()}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  Save Key
+                  저장
                 </button>
                 <button
                   onClick={() => {
@@ -487,11 +490,11 @@ export default function Builder() {
                   }}
                   className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
-                  Cancel
+                  취소
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-4">
-                💡 Your access key is stored locally in your browser and never sent to our servers except for authentication.
+                💡 액세스 키는 브라우저에 로컬 저장되며, 인증 목적으로만 서버에 전송됩니다.
               </p>
             </div>
           </div>
@@ -501,12 +504,12 @@ export default function Builder() {
         {publishedUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">✅ OPS Document Published!</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">✅ OPS 문서 발행 완료!</h3>
               <p className="text-gray-600 mb-6">
-                Your OPS document has been successfully published and is now accessible via the public URL below.
+                OPS 문서가 성공적으로 발행되었습니다. 아래 공개 URL로 접근할 수 있습니다.
               </p>
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-2">Public URL:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">공개 URL:</p>
                 <p className="text-blue-600 break-all">{window.location.origin}{publishedUrl}</p>
               </div>
               <div className="flex gap-3">
@@ -514,7 +517,7 @@ export default function Builder() {
                   onClick={copyPublicUrl}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
-                  📋 Copy Link
+                  📋 링크 복사
                 </button>
                 <a
                   href={publishedUrl}
@@ -522,14 +525,14 @@ export default function Builder() {
                   rel="noopener noreferrer"
                   className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
                 >
-                  👁️ View Page
+                  👁️ 페이지 보기
                 </a>
               </div>
               <button
                 onClick={() => setPublishedUrl(null)}
                 className="w-full mt-3 px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
               >
-                Close
+                닫기
               </button>
             </div>
           </div>

@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Safe OPS Studio - One-Page OPS Brief Generator</title>
-        <meta name="description" content="Turn accident overviews into comprehensive OPS briefs with law mappings, root causes, and prevention checklists" />
+        <title>안전 OPS 뉴스레터 - 중대재해 사례 분석 자료 자동 생성</title>
+        <meta name="description" content="중대재해 개요를 입력하면 관련 법령, 근본 원인, 재발방지 체크리스트가 포함된 OPS 자료를 자동으로 생성합니다" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -15,22 +15,22 @@ export default function Home() {
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Safe OPS Studio
+              안전 OPS 뉴스레터
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-4">
-              Transform Accident Overviews into Comprehensive OPS Briefs
+              중대재해 개요를 손쉽게 OPS 요약자료로 편집하세요
             </p>
             <p className="text-lg text-gray-500 mb-12">
-              Generate one-page safety documents with law mappings, root cause analysis, and prevention checklists in under 10 minutes
+              중대재해 개요를 입력하시면 10분만에 관련 법령 / 근본 원인 / 재발방지 체크리스트를 작성해 드립니다
             </p>
 
             {/* Subscription Form */}
             <div className="mb-16">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Stay Updated
+                안전보건공단 중대재해사례 OPS 받아보기
               </h2>
               <p className="text-gray-600 mb-6">
-                Get the latest OPS briefs and safety insights delivered to your inbox
+                최신 중대재해 사례를 메일로 받아보세요
               </p>
               <SubscriptionForm />
             </div>
@@ -40,30 +40,30 @@ export default function Home() {
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="text-3xl mb-4">⚡</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Fast Generation
+                  빠른 자동 작성
                 </h3>
                 <p className="text-gray-600">
-                  Create comprehensive OPS briefs in less than 10 minutes
+                  10분 이내에 종합적인 OPS 자료를 생성합니다
                 </p>
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="text-3xl mb-4">⚖️</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Law Mapping
+                  관련 법령 조회
                 </h3>
                 <p className="text-gray-600">
-                  Automatic mapping to relevant safety regulations and laws
+                  산업안전보건법 등 관련 법령을 자동으로 매칭합니다
                 </p>
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="text-3xl mb-4">✅</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Prevention Checklists
+                  재발방지 체크리스트
                 </h3>
                 <p className="text-gray-600">
-                  Actionable checklists to prevent similar incidents
+                  유사 재해 예방을 위한 실행 가능한 체크리스트를 제공합니다
                 </p>
               </div>
             </div>
