@@ -33,18 +33,18 @@ export default function PdfButton({
       const options = {
         margin: [10, 10, 10, 10] as [number, number, number, number], // top, right, bottom, left in mm
         filename,
-        image: { type: 'jpeg', quality: 0.95 },
+        image: { type: 'jpeg' as const, quality: 0.95 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
         },
         jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
+          unit: 'mm' as const,
+          format: 'a4' as const,
+          orientation: 'portrait' as const,
         },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const },
       };
 
       // Generate and download PDF

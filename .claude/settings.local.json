@@ -28,7 +28,10 @@
       "Read(//c/Users/s/**)",
       "Bash(curl:*)",
       "Bash(https://api.github.com/repos/Joseph102033/kosha )",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
