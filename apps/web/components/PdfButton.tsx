@@ -31,7 +31,7 @@ export default function PdfButton({
 
       // Configure html2pdf options for A4 size
       const options = {
-        margin: [10, 10, 10, 10], // top, right, bottom, left in mm
+        margin: [10, 10, 10, 10] as [number, number, number, number], // top, right, bottom, left in mm
         filename,
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: {
