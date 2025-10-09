@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { fetchWithAuth, getAccessKey, setAccessKey } from '../lib/auth';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+
 interface OPSFormData {
   title: string;
   incidentDate: string;
@@ -69,7 +71,7 @@ export default function Builder() {
       setError(null);
 
       try {
-        const response = await fetchWithAuth('http://localhost:8787/api/ops/generate', {
+        const response = await fetchWithAuth(`${API_URL}/api/ops/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -123,7 +125,7 @@ export default function Builder() {
     setPublishError(null);
 
     try {
-      const response = await fetchWithAuth('http://localhost:8787/api/ops/save', {
+      const response = await fetchWithAuth(`${API_URL}/api/ops/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -10,13 +10,15 @@
 
 import { useState, FormEvent } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+
 interface SubscriptionFormProps {
   workerUrl?: string; // Cloudflare Worker URL (default: /api/subscribe)
 }
 
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
 
-export default function SubscriptionForm({ workerUrl = '/api/subscribe' }: SubscriptionFormProps) {
+export default function SubscriptionForm({ workerUrl = `${API_URL}/api/subscribe` }: SubscriptionFormProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<FormStatus>('idle');
   const [message, setMessage] = useState('');
