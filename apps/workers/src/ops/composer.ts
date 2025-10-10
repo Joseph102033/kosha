@@ -17,26 +17,26 @@ export function generateSummary(input: OPSInput): string {
     month: 'long',
     day: 'numeric',
   });
-  lines.push(`${input.incidentType} incident occurred on ${date}.`);
+  lines.push(`${date}에 ${input.incidentType} 재해가 발생했습니다.`);
 
   // Line 2: Location
-  lines.push(`Location: ${input.location}.`);
+  lines.push(`장소: ${input.location}`);
 
   // Line 3: Objects involved (if any)
   if (input.agentObject || input.hazardObject) {
-    const objects = [input.agentObject, input.hazardObject].filter(Boolean).join(' and ');
-    lines.push(`Involved: ${objects}.`);
+    const objects = [input.agentObject, input.hazardObject].filter(Boolean).join(' 및 ');
+    lines.push(`관련: ${objects}`);
   }
 
   // Line 4: Primary cause
-  lines.push(`Primary cause: ${input.incidentCause}.`);
+  lines.push(`주요 원인: ${input.incidentCause}`);
 
   // Line 5: Severity assessment (generic)
-  lines.push(`This incident requires immediate investigation and preventive measures.`);
+  lines.push(`이 재해는 즉각적인 조사와 예방 조치가 필요합니다.`);
 
   // Line 6: Action required (if less than 6 lines)
   if (lines.length < 6) {
-    lines.push(`All relevant stakeholders must review this OPS brief.`);
+    lines.push(`모든 관련 이해관계자는 이 OPS 자료를 검토해야 합니다.`);
   }
 
   return lines.join('\n');
@@ -54,15 +54,15 @@ export function extractDirectCauses(input: OPSInput): string[] {
   // Infer additional direct causes based on incident type
   const type = input.incidentType.toLowerCase();
 
-  if (type.includes('fall')) {
-    causes.push('Inadequate fall protection measures');
-    if (input.hazardObject?.toLowerCase().includes('scaffold')) {
-      causes.push('Scaffolding structural failure or instability');
+  if (type.includes('fall') || type.includes('추락')) {
+    causes.push('부적절한 추락 방지 조치');
+    if (input.hazardObject?.toLowerCase().includes('scaffold') || input.hazardObject?.includes('비계')) {
+      causes.push('비계 구조적 결함 또는 불안정');
     }
-  } else if (type.includes('chemical')) {
-    causes.push('Improper chemical storage or handling');
-  } else if (type.includes('fire') || type.includes('explosion')) {
-    causes.push('Ignition source exposure to flammable materials');
+  } else if (type.includes('chemical') || type.includes('화학')) {
+    causes.push('부적절한 화학물질 저장 또는 취급');
+  } else if (type.includes('fire') || type.includes('explosion') || type.includes('화재') || type.includes('폭발')) {
+    causes.push('인화성 물질에 점화원 노출');
   }
 
   return causes.slice(0, 3); // Limit to 3 direct causes
@@ -75,20 +75,20 @@ export function extractIndirectCauses(input: OPSInput): string[] {
   const causes: string[] = [];
 
   // Generic indirect causes
-  causes.push('Insufficient safety training or awareness');
-  causes.push('Inadequate risk assessment procedures');
+  causes.push('불충분한 안전 교육 또는 인식');
+  causes.push('부적절한 위험성 평가 절차');
 
   // Type-specific indirect causes
   const type = input.incidentType.toLowerCase();
 
-  if (type.includes('fall')) {
-    causes.push('Lack of regular safety equipment inspections');
-    causes.push('Inadequate supervision of high-risk work');
-  } else if (type.includes('chemical')) {
-    causes.push('Missing or outdated Material Safety Data Sheets');
-    causes.push('Insufficient ventilation system maintenance');
+  if (type.includes('fall') || type.includes('추락')) {
+    causes.push('정기적인 안전 장비 점검 부족');
+    causes.push('고위험 작업에 대한 부적절한 감독');
+  } else if (type.includes('chemical') || type.includes('화학')) {
+    causes.push('물질안전보건자료(MSDS) 누락 또는 구버전 사용');
+    causes.push('환기 시스템 유지보수 부족');
   } else {
-    causes.push('Gaps in standard operating procedures');
+    causes.push('표준 작업 절차의 미비점');
   }
 
   return causes.slice(0, 4); // Limit to 4 indirect causes
@@ -101,29 +101,29 @@ export function generateChecklist(input: OPSInput): string[] {
   const checklist: string[] = [];
 
   // Universal safety checks
-  checklist.push('Conduct comprehensive risk assessment before work begins');
-  checklist.push('Ensure all workers have completed required safety training');
-  checklist.push('Verify all safety equipment is available and in good condition');
-  checklist.push('Establish clear communication protocols for emergency situations');
+  checklist.push('작업 시작 전 종합적인 위험성 평가 실시');
+  checklist.push('모든 근로자가 필수 안전 교육을 이수했는지 확인');
+  checklist.push('모든 안전 장비가 사용 가능하고 양호한 상태인지 확인');
+  checklist.push('비상 상황을 위한 명확한 의사소통 체계 구축');
 
   // Type-specific checks
   const type = input.incidentType.toLowerCase();
 
-  if (type.includes('fall')) {
-    checklist.push('Inspect all fall protection systems and anchor points');
-    checklist.push('Confirm proper use of personal fall arrest systems');
-    checklist.push('Verify guardrails and safety barriers are securely installed');
-    checklist.push('Ensure adequate lighting in elevated work areas');
-  } else if (type.includes('chemical')) {
-    checklist.push('Review Material Safety Data Sheets with all workers');
-    checklist.push('Ensure proper personal protective equipment is worn');
-    checklist.push('Verify chemical storage containers are properly labeled');
-    checklist.push('Confirm ventilation systems are operational');
+  if (type.includes('fall') || type.includes('추락')) {
+    checklist.push('모든 추락 방지 시스템 및 고정점 점검');
+    checklist.push('개인 추락방지시스템의 적절한 사용 확인');
+    checklist.push('안전난간 및 안전장벽이 안전하게 설치되었는지 확인');
+    checklist.push('높은 곳 작업 구역의 적절한 조명 확보');
+  } else if (type.includes('chemical') || type.includes('화학')) {
+    checklist.push('모든 근로자와 물질안전보건자료(MSDS) 검토');
+    checklist.push('적절한 개인보호구 착용 확인');
+    checklist.push('화학물질 저장 용기의 라벨 부착 확인');
+    checklist.push('환기 시스템 작동 상태 확인');
   } else {
-    checklist.push('Review standard operating procedures with all team members');
-    checklist.push('Inspect work area for potential hazards');
-    checklist.push('Establish emergency evacuation routes');
-    checklist.push('Assign designated safety observer for high-risk tasks');
+    checklist.push('모든 팀원과 표준 작업 절차 검토');
+    checklist.push('작업 구역의 잠재적 위험 요소 점검');
+    checklist.push('비상 대피 경로 설정');
+    checklist.push('고위험 작업을 위한 전담 안전 관찰자 지정');
   }
 
   // Limit to 6-10 items

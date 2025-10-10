@@ -201,6 +201,53 @@ export default function Builder() {
           </div>
         </header>
 
+        {/* OPS Introduction Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                중대재해 개요를 손쉽게 OPS 요약자료로 편집하세요
+              </h2>
+              <p className="text-lg md:text-xl text-gray-600">
+                중대재해 개요를 입력하시면 10분만에 관련 법령 / 근본 원인 / 재발방지 체크리스트를 작성해 드립니다
+              </p>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4">⚡</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  빠른 자동 작성
+                </h3>
+                <p className="text-gray-600">
+                  10분 이내에 종합적인 OPS 자료를 생성합니다
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4">⚖️</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  관련 법령 조회
+                </h3>
+                <p className="text-gray-600">
+                  산업안전보건법 등 관련 법령을 자동으로 매칭합니다
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4">✅</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  재발방지 체크리스트
+                </h3>
+                <p className="text-gray-600">
+                  유사 재해 예방을 위한 실행 가능한 체크리스트를 제공합니다
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -259,7 +306,7 @@ export default function Builder() {
                 {/* Agent Object (Optional) */}
                 <div>
                   <label htmlFor="agentObject" className="block text-sm font-medium text-gray-700 mb-1">
-                    기인물 <span className="text-gray-400">(선택)</span>
+                    재해자 <span className="text-gray-400">(선택)</span>
                   </label>
                   <input
                     type="text"
@@ -274,7 +321,7 @@ export default function Builder() {
                 {/* Hazard Object (Optional) */}
                 <div>
                   <label htmlFor="hazardObject" className="block text-sm font-medium text-gray-700 mb-1">
-                    가해물 <span className="text-gray-400">(선택)</span>
+                    기인물 <span className="text-gray-400">(선택)</span>
                   </label>
                   <input
                     type="text"

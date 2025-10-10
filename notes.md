@@ -1,6 +1,6 @@
 # Safe OPS Studio - Development Notes
 
-**Last Updated**: 2025-10-08
+**Last Updated**: 2025-10-10
 **Vooster Project UID**: UNMR
 **Current Phase**: Week 1 - M1 (MVP Implementation)
 
@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅
-- **Current Task**: Ready for T-003
-- **Overall Progress**: 2/9 tasks completed (22%)
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅
+- **Current Task**: Workers 재배포 필요 (한국어 업데이트)
+- **Overall Progress**: 2/9 tasks completed + 4 major improvements (22% + enhancements)
 
 ---
 
@@ -254,6 +254,67 @@ C:\Users\s\Code\kosha\
 
 ---
 
+## ✅ 2025-10-10 Major Updates (COMPLETED)
+
+### What Was Done:
+
+#### 1. 한국어 응답 구현 ✅ (Task 1)
+**파일 수정**: `apps/workers/src/ops/composer.ts`
+
+**변경 내용**:
+- `generateSummary()`: 모든 영어 텍스트를 한국어로 변환
+  - "incident occurred on" → "에 재해가 발생했습니다"
+  - "Location:" → "장소:"
+  - "Primary cause:" → "주요 원인:"
+- `extractDirectCauses()`: 직접 원인 한국어화
+  - "Inadequate fall protection measures" → "부적절한 추락 방지 조치"
+  - "Scaffolding structural failure" → "비계 구조적 결함"
+- `extractIndirectCauses()`: 간접 원인 한국어화
+  - "Insufficient safety training" → "불충분한 안전 교육 또는 인식"
+  - "Inadequate risk assessment" → "부적절한 위험성 평가 절차"
+- `generateChecklist()`: 체크리스트 항목 한국어화 (10개 항목)
+  - "Conduct comprehensive risk assessment" → "작업 시작 전 종합적인 위험성 평가 실시"
+
+**테스트 결과**: ✅ 로컬 테스트 통과 (curl로 확인)
+
+#### 2. OPS 소개 섹션 Builder로 이동 ✅ (Task 3)
+**파일 수정**: `apps/web/pages/builder.tsx`
+
+**추가된 섹션** (204-249번 줄):
+- 상단에 OPS 기능 소개 영역 추가
+- 제목: "중대재해 개요를 손쉽게 OPS 요약자료로 편집하세요"
+- 3개 Feature 카드:
+  - ⚡ 빠른 자동 작성
+  - ⚖️ 관련 법령 조회
+  - ✅ 재발방지 체크리스트
+- 그라데이션 배경 (blue-50 to indigo-50)
+
+#### 3. Landing 페이지 뉴스레터 중심 재디자인 ✅ (Task 4)
+**파일 수정**: `apps/web/pages/index.tsx`
+
+**변경 내용**:
+- 제목 변경: "안전보건공단 중대재해사례 OPS 뉴스레터"
+- 서브헤더: "중대재해사례 OPS를 이메일로 받아보세요"
+- OPS 제작 관련 내용 제거 (Builder로 이동)
+- 새로운 "제공 내용" 섹션 추가:
+  - 🖼️ 재해발생상황 삽화
+  - ✅ 재발방지 체크리스트
+  - ⚖️ 관련 법령
+- Builder로의 CTA 버튼 추가 (하단 파란색 박스)
+
+#### 4. 404 오류 진단 완료 ✅ (Task 2a)
+
+**진단 결과**:
+- ✅ Workers API 정상 작동 중 (`https://safe-ops-studio-workers.yosep102033.workers.dev/health`)
+- ✅ KV Namespace 정상 존재 (`safe-ops-studio-cache`)
+- ✅ OpenNext Cloudflare 설정 완료 (`@opennextjs/cloudflare@1.9.2`)
+- ❌ **Workers 코드가 구버전** (2025-10-09) - 한국어 변경사항 미반영
+
+**근본 원인**:
+배포된 Workers에 최신 `composer.ts` 변경사항이 반영되지 않음
+
+---
+
 ## ⚠️ Known Issues
 
 ### 1. Vooster MCP Not Connected
@@ -278,6 +339,22 @@ C:\Users\s\Code\kosha\
 **Status**: ⚠️ Requires Manual Setup
 **Issue**: `CLOUDFLARE_API_TOKEN` not set for non-interactive environment
 **Workaround**: Using Cloudflare MCP for D1/KV operations instead of Wrangler CLI
+
+### 3. Workers Deployment Required (2025-10-10)
+**Status**: ⚠️ ACTION REQUIRED
+**Issue**: 최신 한국어 변경사항이 프로덕션에 미배포됨
+**해결 방법**:
+```bash
+# 터미널에서 실행
+cd apps/workers
+npm run deploy
+# 또는
+wrangler deploy
+```
+**영향**:
+- 현재 프로덕션 API는 영어로 응답
+- 로컬 개발 환경에서는 한국어 정상 작동
+- 배포 후 즉시 한국어 응답 제공 가능
 
 ---
 

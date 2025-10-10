@@ -31,7 +31,9 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd public OPS page route and Korean localization\n\nMajor fixes:\n1. Create /p/[slug] dynamic route for published OPS pages (fixes 404 error)\n2. Add complete Korean localization to homepage and builder\n3. Improve UX with Korean labels and placeholders\n\nChanges:\n- apps/web/pages/p/[slug].tsx: New public OPS page with SSG\n- apps/web/pages/index.tsx: Korean text for all UI elements\n- apps/web/pages/builder.tsx: Complete Korean translation\n\nFixes:\n- ❌ Problem 1 (Critical): Published OPS 404 error → ✅ Fixed with dynamic route\n- ❌ Problem 3 (Medium): English UI → ✅ Fixed with Korean localization\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
