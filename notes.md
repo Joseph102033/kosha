@@ -1,6 +1,6 @@
 # Safe OPS Studio - Development Notes
 
-**Last Updated**: 2025-10-10
+**Last Updated**: 2025-10-11
 **Vooster Project UID**: UNMR
 **Current Phase**: Week 1 - M1 (MVP Implementation)
 
@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅
-- **Current Task**: Workers 재배포 필요 (한국어 업데이트)
-- **Overall Progress**: 2/9 tasks completed + 4 major improvements (22% + enhancements)
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅
+- **Current Task**: Ready for next feature development
+- **Overall Progress**: 2/9 tasks completed + 4 major improvements + deployment (22% + enhancements)
 
 ---
 
@@ -315,6 +315,65 @@ C:\Users\s\Code\kosha\
 
 ---
 
+## ✅ 2025-10-11 Workers Deployment (COMPLETED)
+
+### What Was Done:
+
+#### 1. 배포 상태 확인 ✅
+**확인 내용**:
+- 웹사이트 (kosha-8ad.pages.dev): 한국어 정상 표시 확인
+- Workers API: 한국어 코드는 작성되었으나 배포 필요
+- 마지막 배포: 2025-10-10 14:51 (구버전)
+
+#### 2. Workers 재배포 ✅
+**배포 정보**:
+- 시간: 2025-10-11 00:52 KST
+- Version ID: `dee43273-a3b1-4980-9d93-7320a2fe2ed1`
+- URL: https://safe-ops-studio-workers.yosep102033.workers.dev
+- Wrangler: 3.114.15 사용
+- Upload Size: 52.05 KiB / gzip: 11.02 KiB
+- Startup Time: 12 ms
+
+#### 3. 한국어 응답 검증 ✅
+**테스트 결과**:
+```bash
+# 입력: 영어 재해 정보
+# 출력: 한국어 OPS 문서 (정상)
+{
+  "success": true,
+  "data": {
+    "summary": "2025년 1월 15일에 Fall 재해가 발생했습니다.\n장소: Seoul Construction Site\n주요 원인: Worker fell from 3rd floor without safety harness\n이 재해는 즉각적인 조사와 예방 조치가 필요합니다.\n모든 관련 이해관계자는 이 OPS 자료를 검토해야 합니다.",
+    "causes": {
+      "direct": ["Worker fell from 3rd floor without safety harness", "부적절한 추락 방지 조치"],
+      "indirect": ["불충분한 안전 교육 또는 인식", "부적절한 위험성 평가 절차", "정기적인 안전 장비 점검 부족", "고위험 작업에 대한 부적절한 감독"]
+    },
+    "checklist": [
+      "작업 시작 전 종합적인 위험성 평가 실시",
+      "모든 근로자가 필수 안전 교육을 이수했는지 확인",
+      "모든 안전 장비가 사용 가능하고 양호한 상태인지 확인",
+      "비상 상황을 위한 명확한 의사소통 체계 구축",
+      "모든 추락 방지 시스템 및 고정점 점검",
+      "개인 추락방지시스템의 적절한 사용 확인",
+      "안전난간 및 안전장벽이 안전하게 설치되었는지 확인",
+      "높은 곳 작업 구역의 적절한 조명 확보"
+    ],
+    "laws": [
+      {"title": "산업안전보건법 제38조 (추락 등의 위험 방지)", "url": "..."},
+      {"title": "산업안전보건기준에 관한 규칙 제42조 (개구부 등의 방호 조치)", "url": "..."}
+    ]
+  }
+}
+```
+
+#### 4. 배포 완료 확인 ✅
+**현재 상태**:
+- ✅ Frontend (Pages): 한국어 UI 정상 작동
+- ✅ Backend (Workers): 한국어 OPS 생성 정상 작동
+- ✅ API 응답: UTF-8 인코딩 정상
+- ✅ 법령 매칭: 한국 법령 정상 표시
+
+---
+
 ## ⚠️ Known Issues
 
 ### 1. Vooster MCP Not Connected
@@ -340,21 +399,26 @@ C:\Users\s\Code\kosha\
 **Issue**: `CLOUDFLARE_API_TOKEN` not set for non-interactive environment
 **Workaround**: Using Cloudflare MCP for D1/KV operations instead of Wrangler CLI
 
-### 3. Workers Deployment Required (2025-10-10)
-**Status**: ⚠️ ACTION REQUIRED
+### 3. Workers Deployment (RESOLVED ✅ 2025-10-11)
+**Status**: ✅ RESOLVED
 **Issue**: 최신 한국어 변경사항이 프로덕션에 미배포됨
-**해결 방법**:
-```bash
-# 터미널에서 실행
-cd apps/workers
-npm run deploy
-# 또는
-wrangler deploy
+**Resolution**:
+- Workers 재배포 완료 (2025-10-11 00:52 KST)
+- Version ID: `dee43273-a3b1-4980-9d93-7320a2fe2ed1`
+- 한국어 응답 정상 작동 확인 완료
+
+**Test Results**:
+```json
+{
+  "summary": "2025년 1월 15일에 Fall 재해가 발생했습니다...",
+  "causes": {
+    "direct": [...],
+    "indirect": ["불충분한 안전 교육 또는 인식", ...]
+  },
+  "checklist": ["작업 시작 전 종합적인 위험성 평가 실시", ...],
+  "laws": [...]
+}
 ```
-**영향**:
-- 현재 프로덕션 API는 영어로 응답
-- 로컬 개발 환경에서는 한국어 정상 작동
-- 배포 후 즉시 한국어 응답 제공 가능
 
 ---
 
