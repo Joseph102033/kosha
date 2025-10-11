@@ -63,7 +63,8 @@ export async function generateIllustration(
       }
     );
 
-    // Response is a Blob/ReadableStream
+    // Handle different response types
+    // Workers AI can return ReadableStream, ArrayBuffer, or object with image property
     if (response instanceof ReadableStream) {
       const reader = response.getReader();
       const chunks: Uint8Array[] = [];
@@ -86,6 +87,29 @@ export async function generateIllustration(
       // Convert to base64
       const base64 = btoa(String.fromCharCode(...combined));
       return `data:image/png;base64,${base64}`;
+    } else if (response instanceof ArrayBuffer) {
+      const bytes = new Uint8Array(response);
+      const base64 = btoa(String.fromCharCode(...bytes));
+      return `data:image/png;base64,${base64}`;
+    } else if (typeof response === 'object' && response !== null) {
+      // Check if response has image data
+      const anyResponse = response as any;
+      if (anyResponse.image && anyResponse.image instanceof ArrayBuffer) {
+        const bytes = new Uint8Array(anyResponse.image);
+        const base64 = btoa(String.fromCharCode(...bytes));
+        return `data:image/png;base64,${base64}`;
+      } else if (typeof anyResponse.image === 'string') {
+        // Already base64 or data URL
+        if (anyResponse.image.startsWith('data:')) {
+          return anyResponse.image;
+        } else {
+          return `data:image/png;base64,${anyResponse.image}`;
+        }
+      } else if (anyResponse.data && anyResponse.data instanceof ArrayBuffer) {
+        const bytes = new Uint8Array(anyResponse.data);
+        const base64 = btoa(String.fromCharCode(...bytes));
+        return `data:image/png;base64,${base64}`;
+      }
     }
 
     return null;
