@@ -3,16 +3,34 @@
  * This handles /p/[slug] routes by serving the pre-built HTML with client-side hydration
  */
 
-export async function onRequest(context: any) {
-  // Serve the pre-built [slug].html file
-  // The client-side JavaScript will handle fetching the actual OPS data
-  const response = await context.env.ASSETS.fetch(context.request);
+interface Env {
+  ASSETS: {
+    fetch: (request: Request) => Promise<Response>;
+  };
+}
 
-  // If the asset is not found, try to serve the [slug].html template
-  if (response.status === 404) {
-    const slugHtmlUrl = new URL('/p/[slug].html', context.request.url);
-    return await context.env.ASSETS.fetch(slugHtmlUrl.toString());
+export async function onRequest(context: { request: Request; env: Env }) {
+  // Try to fetch the [slug].html template
+  const url = new URL(context.request.url);
+  const templateUrl = new URL('/p/[slug].html', url.origin);
+
+  try {
+    const response = await context.env.ASSETS.fetch(new Request(templateUrl.toString()));
+
+    if (response.ok) {
+      // Return the template with proper headers
+      return new Response(response.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching template:', error);
   }
 
-  return response;
+  // Fallback to 404
+  return new Response('Not Found', { status: 404 });
 }

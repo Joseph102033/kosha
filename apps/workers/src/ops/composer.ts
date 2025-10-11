@@ -6,6 +6,23 @@
 import type { OPSInput, OPSDocument, LawReference } from './models';
 
 /**
+ * Convert incident type to Korean
+ */
+function getIncidentTypeKorean(incidentType: string): string {
+  const typeMap: Record<string, string> = {
+    'fall': '추락',
+    'chemical spill': '화학물질 누출',
+    'fire': '화재',
+    'explosion': '폭발',
+    'equipment failure': '장비 고장',
+    'other': '기타',
+  };
+
+  const normalized = incidentType.toLowerCase().trim();
+  return typeMap[normalized] || incidentType;
+}
+
+/**
  * Generate a summary (4-6 lines) based on incident input
  */
 export function generateSummary(input: OPSInput): string {
@@ -17,7 +34,8 @@ export function generateSummary(input: OPSInput): string {
     month: 'long',
     day: 'numeric',
   });
-  lines.push(`${date}에 ${input.incidentType} 재해가 발생했습니다.`);
+  const incidentTypeKR = getIncidentTypeKorean(input.incidentType);
+  lines.push(`${date}에 ${incidentTypeKR} 재해가 발생했습니다.`);
 
   // Line 2: Location
   lines.push(`장소: ${input.location}`);

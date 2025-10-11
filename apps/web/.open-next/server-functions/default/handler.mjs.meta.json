@@ -3232,7 +3232,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 16423,
+      "bytes": 16517,
       "imports": [
         {
           "path": "path",
@@ -3289,8 +3289,13 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/chunks/513.js": {
+      "bytes": 25056,
+      "imports": [],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/webpack-runtime.js": {
-      "bytes": 1221,
+      "bytes": 1276,
       "imports": [
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/200.js",
@@ -3301,6 +3306,11 @@
           "path": ".open-next/server-functions/default/.next/server/chunks/341.js",
           "kind": "require-call",
           "original": "./chunks/341.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/513.js",
+          "kind": "require-call",
+          "original": "./chunks/513.js"
         }
       ],
       "format": "cjs"
@@ -3734,37 +3744,6 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/pages/_document.js": {
-      "bytes": 601,
-      "imports": [
-        {
-          "path": ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js",
-          "kind": "require-call",
-          "original": "next/dist/compiled/next-server/pages.runtime.prod.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/node_modules/react/index.js",
-          "kind": "require-call",
-          "original": "react"
-        },
-        {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": ".open-next/server-functions/default/node_modules/react/jsx-runtime.js",
-          "kind": "require-call",
-          "original": "react/jsx-runtime"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/webpack-runtime.js",
-          "kind": "require-call",
-          "original": "../webpack-runtime.js"
-        }
-      ],
-      "format": "cjs"
-    },
     ".open-next/server-functions/default/.next/server/pages/_error.js": {
       "bytes": 4407,
       "imports": [
@@ -3801,8 +3780,39 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/pages/_document.js": {
+      "bytes": 601,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js",
+          "kind": "require-call",
+          "original": "next/dist/compiled/next-server/pages.runtime.prod.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/node_modules/react/index.js",
+          "kind": "require-call",
+          "original": "react"
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": ".open-next/server-functions/default/node_modules/react/jsx-runtime.js",
+          "kind": "require-call",
+          "original": "react/jsx-runtime"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/webpack-runtime.js",
+          "kind": "require-call",
+          "original": "../webpack-runtime.js"
+        }
+      ],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/pages/p/[slug].js": {
-      "bytes": 32981,
+      "bytes": 7980,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js",
@@ -3838,7 +3848,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
-      "bytes": 17568,
+      "bytes": 19685,
       "imports": [
         {
           "path": "path",
@@ -3891,14 +3901,14 @@
           "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_app.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/pages/_document.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_document.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/pages/_error.js",
           "kind": "require-call",
           "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_error.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/pages/_document.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_document.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/pages/p/[slug].js",
@@ -4564,14 +4574,14 @@
           "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_app.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/pages/_document.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_document.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/pages/_error.js",
           "kind": "require-call",
           "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_error.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/pages/_document.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\s\\Code\\kosha\\apps\\web\\.open-next\\server-functions\\default\\.next\\server\\pages\\_document.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/pages/p/[slug].js",
@@ -7227,7 +7237,7 @@
           "bytesInOutput": 586
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 11621
+          "bytesInOutput": 11701
         },
         ".open-next/server-functions/default/node_modules/react/cjs/react-jsx-runtime.production.js": {
           "bytesInOutput": 750
@@ -7241,8 +7251,11 @@
         ".open-next/server-functions/default/.next/server/chunks/341.js": {
           "bytesInOutput": 71659
         },
+        ".open-next/server-functions/default/.next/server/chunks/513.js": {
+          "bytesInOutput": 26248
+        },
         ".open-next/server-functions/default/.next/server/webpack-runtime.js": {
-          "bytesInOutput": 1305
+          "bytesInOutput": 1337
         },
         ".open-next/server-functions/default/.next/server/pages/_app.js": {
           "bytesInOutput": 479
@@ -7319,17 +7332,17 @@
         ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js": {
           "bytesInOutput": 133852
         },
-        ".open-next/server-functions/default/.next/server/pages/_document.js": {
-          "bytesInOutput": 692
-        },
         ".open-next/server-functions/default/.next/server/pages/_error.js": {
           "bytesInOutput": 4563
         },
+        ".open-next/server-functions/default/.next/server/pages/_document.js": {
+          "bytesInOutput": 692
+        },
         ".open-next/server-functions/default/.next/server/pages/p/[slug].js": {
-          "bytesInOutput": 34721
+          "bytesInOutput": 8362
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
-          "bytesInOutput": 16678
+          "bytesInOutput": 19203
         },
         ".open-next/server-functions/default/node_modules/next/dist/lib/wait.js": {
           "bytesInOutput": 341
@@ -7617,7 +7630,7 @@
           "bytesInOutput": 64036
         }
       },
-      "bytes": 2644077
+      "bytes": 2646603
     }
   }
 }

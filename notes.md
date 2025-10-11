@@ -374,6 +374,107 @@ C:\Users\s\Code\kosha\
 
 ---
 
+## ✅ 2025-10-11 Dynamic Route Fix (COMPLETED)
+
+### What Was Done:
+
+#### 1. Deployment Architecture Change ✅
+**변경 사항**:
+- OpenNext → Next.js Static Export로 전환 완료 (이전 세션)
+- GitHub Actions workflow 수정: `.open-next` → `out` 경로
+- `next.config.js`: `output: 'export'` 설정
+- `package.json`: OpenNext 빌드 스크립트 제거
+
+#### 2. Dynamic Route 404 Issue Diagnosis ✅
+**문제 확인**:
+- 사용자가 OPS 발행 시 404 오류 발생 (예: `/p/mglnfd7r-q3lh2`)
+- 스크린샷: "OPS 문서 발행 완료" 모달 표시되지만 링크 접근 불가
+- 삽화도 생성되지 않음
+
+**근본 원인**:
+- Next.js static export는 `fallback: 'blocking'`을 지원하지 않음
+- `getStaticPaths`에서 빈 paths 반환 시 동적 경로 생성 불가
+- SSG는 빌드 타임에 모든 경로를 알아야 하지만, OPS 문서는 런타임에 생성됨
+
+#### 3. Client-Side Rendering으로 전환 ✅
+**파일 수정**: `apps/web/pages/p/[slug].tsx`
+
+**변경 내용**:
+- `getStaticPaths` 및 `getStaticProps` 완전 제거
+- `useRouter`로 동적 slug 파라미터 추출
+- `useState` + `useEffect`로 클라이언트 사이드 데이터 페칭 구현
+- 로딩 상태 추가 (스피너 애니메이션)
+- 에러 핸들링 개선
+
+**코드 구조**:
+```typescript
+export default function PublicOPSPage() {
+  const router = useRouter();
+  const { slug } = router.query;
+  const [opsData, setOpsData] = useState<OPSData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) return;
+    // Fetch OPS data from API
+    fetch(`${API_URL}/api/ops/${slug}`)...
+  }, [slug]);
+
+  // Render loading, error, or content
+}
+```
+
+#### 4. 빌드 및 배포 ✅
+**빌드 결과**:
+```
+✓ Compiled successfully in 5.7s
+✓ Generating static pages (5/5)
+✓ Exporting (5/5)
+
+Route (pages)                    Size  First Load JS
+├ ○ / (314 ms)                2.78 kB         103 kB
+├ ○ /404                      2.28 kB          99 kB
+├ ○ /builder (303 ms)         5.49 kB         102 kB
+└ ○ /p/[slug] (301 ms)        2.18 kB         102 kB
+```
+
+**커밋 정보**:
+- Commit: `69470d2`
+- Message: "Fix dynamic route 404 by converting to client-side rendering"
+- Push: `main` 브랜치에 성공적으로 푸시됨
+
+#### 5. 현재 배포 대기 중 ✅
+**GitHub Actions**:
+- 배포 트리거됨 (커밋 `69470d2`)
+- 두 개의 Job 실행 중:
+  1. `deploy-web`: Next.js → Cloudflare Pages
+  2. `deploy-workers`: Cloudflare Workers
+
+**예상 결과**:
+- ✅ 발행된 OPS 문서 URL 접근 가능 (예: `/p/mglnfd7r-q3lh2`)
+- ✅ 동적 경로가 클라이언트 사이드에서 렌더링
+- ✅ Workers API에서 OPS 데이터 페칭
+
+### Technical Details:
+
+**Before (SSG with getStaticPaths)**:
+- ❌ `fallback: 'blocking'` - static export와 호환 불가
+- ❌ 빌드 타임에 경로를 알 수 없어 404 발생
+- ❌ `revalidate` - ISR 기능 static export에서 미지원
+
+**After (CSR with useEffect)**:
+- ✅ 클라이언트 사이드에서 런타임에 데이터 페칭
+- ✅ 사용자가 생성한 동적 콘텐츠 지원
+- ✅ 로딩/에러 상태 UX 개선
+- ✅ Next.js static export와 완전 호환
+
+**Trade-offs**:
+- SEO: SSR/SSG보다 낮음 (하지만 공개 OPS는 검색엔진 최적화가 필수 요구사항 아님)
+- 성능: 초기 로딩 시 API 요청 필요 (하지만 Workers API는 빠름)
+- UX: 로딩 스피너 표시됨 (명확한 피드백 제공)
+
+---
+
 ## ⚠️ Known Issues
 
 ### 1. Vooster MCP Not Connected

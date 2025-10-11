@@ -33,7 +33,21 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nAdd public OPS page route and Korean localization\n\nMajor fixes:\n1. Create /p/[slug] dynamic route for published OPS pages (fixes 404 error)\n2. Add complete Korean localization to homepage and builder\n3. Improve UX with Korean labels and placeholders\n\nChanges:\n- apps/web/pages/p/[slug].tsx: New public OPS page with SSG\n- apps/web/pages/index.tsx: Korean text for all UI elements\n- apps/web/pages/builder.tsx: Complete Korean translation\n\nFixes:\n- ❌ Problem 1 (Critical): Published OPS 404 error → ✅ Fixed with dynamic route\n- ❌ Problem 3 (Medium): English UI → ✅ Fixed with Korean localization\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(wrangler deployments:*)",
+      "Bash(npx wrangler deployments:*)",
+      "mcp__cloudflare-bindings__workers_list",
+      "mcp__cloudflare-bindings__kv_namespaces_list",
+      "Bash(npm run deploy:*)",
+      "Bash(python:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Korean language support and redesign pages\n\nMajor improvements:\n1. Implement Korean OPS generation (composer.ts)\n   - Korean summary, causes, and checklist\n   - Support for Korean incident types\n   \n2. Move OPS features to Builder page\n   - Add introduction section at top\n   - 3 feature cards with gradient background\n   \n3. Redesign Landing page for newsletter focus\n   - Update hero text for newsletter subscription\n   - Replace features with \"What We Provide\" section\n   - Add CTA button to Builder\n   \n4. Add comprehensive deployment guide\n   - Step-by-step deployment instructions\n   - Testing procedures and troubleshooting\n\nChanges:\n- apps/workers/src/ops/composer.ts: Korean text conversion\n- apps/web/pages/builder.tsx: Add OPS introduction section\n- apps/web/pages/index.tsx: Newsletter-focused redesign\n- notes.md: Update work log with 2025-10-10 changes\n- DEPLOYMENT_GUIDE.md: New deployment documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx wrangler pages deployments list:*)",
+      "Bash(npx wrangler pages deployment:*)",
+      "Bash(npx wrangler pages deploy:*)",
+      "WebFetch(domain:kosha-8ad.pages.dev)",
+      "WebFetch(domain:ebc9c72d.kosha-8ad.pages.dev)",
+      "Bash(git commit:*)",
+      "Bash(npx wrangler:*)"
     ],
     "deny": [],
     "ask": []
