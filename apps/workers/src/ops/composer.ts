@@ -48,21 +48,33 @@ export function generateSummary(input: OPSInput): string {
 export function extractDirectCauses(input: OPSInput): string[] {
   const causes: string[] = [];
 
-  // Primary cause from input
-  causes.push(input.incidentCause);
-
-  // Infer additional direct causes based on incident type
+  // Infer direct causes based on incident type (in Korean)
   const type = input.incidentType.toLowerCase();
 
   if (type.includes('fall') || type.includes('추락')) {
     causes.push('부적절한 추락 방지 조치');
+    causes.push('안전장비 미착용 또는 부적절한 사용');
     if (input.hazardObject?.toLowerCase().includes('scaffold') || input.hazardObject?.includes('비계')) {
       causes.push('비계 구조적 결함 또는 불안정');
+    } else {
+      causes.push('작업발판 및 안전난간 미설치');
     }
   } else if (type.includes('chemical') || type.includes('화학')) {
     causes.push('부적절한 화학물질 저장 또는 취급');
+    causes.push('개인보호구 미착용');
+    causes.push('물질안전보건자료(MSDS) 미비치 또는 미확인');
   } else if (type.includes('fire') || type.includes('explosion') || type.includes('화재') || type.includes('폭발')) {
     causes.push('인화성 물질에 점화원 노출');
+    causes.push('소화 설비 미비 또는 미작동');
+    causes.push('작업 전 화기 위험성 평가 미실시');
+  } else if (type.includes('equipment') || type.includes('장비')) {
+    causes.push('장비 점검 및 정비 소홀');
+    causes.push('안전장치 미작동 또는 임의 해제');
+    causes.push('부적절한 장비 조작');
+  } else {
+    causes.push('안전 작업 절차 미준수');
+    causes.push('작업 전 위험성 평가 미실시');
+    causes.push('부적절한 작업 환경 관리');
   }
 
   return causes.slice(0, 3); // Limit to 3 direct causes
