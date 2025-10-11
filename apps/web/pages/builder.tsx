@@ -52,7 +52,15 @@ export default function Builder() {
   // Publish state
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [publishedOpsId, setPublishedOpsId] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+
+  // Email sending state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSendResult, setEmailSendResult] = useState<{ sent: number; failed: number } | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Auth state
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -150,6 +158,7 @@ export default function Builder() {
 
       if (data.success && data.data) {
         setPublishedUrl(data.data.publicUrl);
+        setPublishedOpsId(data.data.opsId);
       } else {
         setPublishError(data.error || 'Failed to publish OPS document');
       }
@@ -173,6 +182,72 @@ export default function Builder() {
       setHasAccessKey(true);
       setShowAuthModal(false);
       setAccessKeyInput('');
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!publishedUrl || !publishedOpsId) {
+      setEmailError('발행된 OPS 문서가 없습니다');
+      return;
+    }
+
+    // Parse email addresses (comma or newline separated)
+    const emails = emailRecipients
+      .split(/[,\n]/)
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+
+    if (emails.length === 0) {
+      setEmailError('이메일 주소를 입력해주세요');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalidEmails = emails.filter(email => !emailRegex.test(email));
+    if (invalidEmails.length > 0) {
+      setEmailError(`잘못된 이메일 주소: ${invalidEmails.join(', ')}`);
+      return;
+    }
+
+    setIsSendingEmail(true);
+    setEmailError(null);
+    setEmailSendResult(null);
+
+    try {
+      const fullUrl = `${window.location.origin}${publishedUrl}`;
+
+      const response = await fetchWithAuth(`${API_URL}/api/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opsId: publishedOpsId,
+          publicUrl: fullUrl,
+          recipients: emails,
+        }),
+      });
+
+      if (response.status === 401) {
+        setEmailError('인증 오류: 액세스 키를 확인해주세요');
+        setShowAuthModal(true);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setEmailSendResult({
+          sent: data.data.sent,
+          failed: data.data.failed,
+        });
+        setEmailRecipients(''); // Clear input on success
+      } else {
+        setEmailError(data.error || '이메일 발송 실패');
+      }
+    } catch (err) {
+      setEmailError('네트워크 오류: 이메일을 발송할 수 없습니다');
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -583,7 +658,7 @@ export default function Builder() {
                 <p className="text-sm font-medium text-gray-700 mb-2">공개 URL:</p>
                 <p className="text-blue-600 break-all">{window.location.origin}{publishedUrl}</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mb-3">
                 <button
                   onClick={copyPublicUrl}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -599,12 +674,86 @@ export default function Builder() {
                   👁️ 페이지 보기
                 </a>
               </div>
+
+              {/* Email Send Button - Admin Only */}
+              {hasAccessKey && (
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium mb-3"
+                >
+                  📧 이메일로 공유 (관리자 전용)
+                </button>
+              )}
+
               <button
-                onClick={() => setPublishedUrl(null)}
-                className="w-full mt-3 px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+                onClick={() => {
+                  setPublishedUrl(null);
+                  setPublishedOpsId(null);
+                }}
+                className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
               >
                 닫기
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Email Send Modal */}
+        {showEmailModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">📧 이메일로 OPS 공유</h3>
+              <p className="text-gray-600 mb-4">
+                이메일 주소를 입력하세요. 여러 주소는 쉼표(,) 또는 줄바꿈으로 구분합니다.
+              </p>
+
+              <textarea
+                value={emailRecipients}
+                onChange={(e) => setEmailRecipients(e.target.value)}
+                placeholder="예:&#10;hong@example.com,&#10;kim@example.com&#10;lee@example.com"
+                rows={5}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 mb-4"
+              />
+
+              {emailError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-600 text-sm">⚠️ {emailError}</p>
+                </div>
+              )}
+
+              {emailSendResult && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-green-700 text-sm font-medium">
+                    ✅ 발송 완료: {emailSendResult.sent}건
+                    {emailSendResult.failed > 0 && ` / 실패: ${emailSendResult.failed}건`}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSendEmail}
+                  disabled={isSendingEmail || !emailRecipients.trim()}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  {isSendingEmail ? '📤 발송 중...' : '📤 이메일 발송'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setEmailRecipients('');
+                    setEmailError(null);
+                    setEmailSendResult(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  취소
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-4">
+                💡 이메일에는 OPS 문서 링크와 요약 정보가 포함됩니다.
+              </p>
             </div>
           </div>
         )}
