@@ -33,7 +33,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/web/out --project-name=safe-ops-studio
+          command: pages deploy apps/web/.open-next --project-name=kosha
 
   deploy-workers:
     name: Deploy Cloudflare Workers
