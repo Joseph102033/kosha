@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import SubscriptionForm from '../components/SubscriptionForm';
 
 export default function Home() {
@@ -78,12 +79,12 @@ export default function Home() {
               <p className="text-blue-100 mb-6">
                 OPS 작성 도구를 사용하여 10분 만에 전문적인 OPS 자료를 생성하세요
               </p>
-              <a
+              <Link
                 href="/builder"
                 className="inline-block px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
               >
                 OPS 작성 도구 시작하기 →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
