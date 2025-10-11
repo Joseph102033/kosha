@@ -53,11 +53,11 @@ export async function handleGenerateOPS(request: Request, env: Env): Promise<Res
 
     const input: GenerateOPSRequest = body;
 
-    // Match laws based on incident type and objects
-    const laws = await matchLaws(input.incidentType, input.agentObject, input.hazardObject, env);
+    // Match laws based on incident type and objects (with AI-powered keyword extraction)
+    const laws = await matchLaws(input.incidentType, input.agentObject, input.hazardObject, env, input.incidentCause);
 
-    // Compose OPS document
-    const opsDocument = composeOPS(input, laws);
+    // Compose OPS document (with AI-powered analysis)
+    const opsDocument = await composeOPS(input, laws, env);
 
     // Generate illustration (optional - don't fail if this fails)
     try {

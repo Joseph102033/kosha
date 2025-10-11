@@ -30,6 +30,7 @@ export interface Env {
   // Environment variables
   ACCESS_KEY?: string;
   EMAIL_API_KEY?: string;
+  GEMINI_API_KEY?: string;
 }
 
 export default {
