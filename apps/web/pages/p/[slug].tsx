@@ -1,7 +1,7 @@
-import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safe-ops-studio-workers.yosep102033.workers.dev';
 
@@ -34,15 +34,63 @@ interface OPSData {
   createdAt: string;
 }
 
-interface PublicOPSPageProps {
-  opsData: OPSData | null;
-  slug: string;
-}
-
-export default function PublicOPSPage({ opsData, slug }: PublicOPSPageProps) {
+export default function PublicOPSPage() {
+  const router = useRouter();
+  const { slug } = router.query;
   const [activeTab, setActiveTab] = useState<'summary' | 'causes' | 'checklist' | 'laws'>('summary');
+  const [opsData, setOpsData] = useState<OPSData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!opsData) {
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchOPSData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/api/ops/${slug}`);
+
+        if (!response.ok) {
+          setError(true);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !data.data) {
+          setError(true);
+          return;
+        }
+
+        setOpsData(data.data);
+      } catch (err) {
+        console.error('Error fetching OPS data:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOPSData();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <>
+        <Head>
+          <title>Loading... | Safe OPS Studio</title>
+        </Head>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-xl text-gray-600">Loading OPS Document...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !opsData) {
     return (
       <>
         <Head>
@@ -222,59 +270,3 @@ export default function PublicOPSPage({ opsData, slug }: PublicOPSPageProps) {
     </>
   );
 }
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  // For static export, return empty paths
-  // Pages will be generated on-demand in production
-  return {
-    paths: [],
-    fallback: 'blocking',
-  };
-};
-
-export const getStaticProps: GetStaticProps<PublicOPSPageProps> = async ({ params }) => {
-  const slug = params?.slug as string;
-
-  try {
-    const response = await fetch(`${API_URL}/api/ops/${slug}`);
-
-    if (!response.ok) {
-      return {
-        props: {
-          opsData: null,
-          slug,
-        },
-        revalidate: 60, // Revalidate every 60 seconds
-      };
-    }
-
-    const data = await response.json();
-
-    if (!data.success || !data.data) {
-      return {
-        props: {
-          opsData: null,
-          slug,
-        },
-        revalidate: 60,
-      };
-    }
-
-    return {
-      props: {
-        opsData: data.data,
-        slug,
-      },
-      revalidate: 3600, // Revalidate every hour
-    };
-  } catch (error) {
-    console.error('Error fetching OPS data:', error);
-    return {
-      props: {
-        opsData: null,
-        slug,
-      },
-      revalidate: 60,
-    };
-  }
-};
