@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npx @opennextjs/cloudflare build --skipBuild",
-    "preview": "wrangler pages dev .open-next/assets --compatibility-flag=nodejs_compat --compatibility-date=2024-10-08 --port 8788",
-    "deploy": "npm run build && wrangler deploy",
+    "build": "next build",
+    "preview": "npx serve out",
+    "deploy": "npm run build && wrangler pages deploy out --project-name=kosha",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
