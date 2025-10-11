@@ -1,0 +1,3 @@
+# Cloudflare Pages redirects for dynamic routes
+# Redirect all /p/* routes to /p/[slug].html for client-side rendering
+/p/* /p/[slug].html 200
