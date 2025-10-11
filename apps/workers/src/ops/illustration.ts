@@ -7,36 +7,111 @@ import type { OPSInput } from './models';
 import type { Env } from '../index';
 
 /**
- * Generate English prompt for AI image generation
- * Korean text needs to be translated to English for better AI understanding
+ * Translate Korean incident cause to English for AI understanding
+ */
+function translateIncidentCause(cause: string): string {
+  // Simple translation hints for common Korean terms
+  const translations: Record<string, string> = {
+    '안전벨트': 'safety harness',
+    '안전모': 'hard hat / safety helmet',
+    '추락': 'falling from height',
+    '비계': 'scaffolding',
+    '사다리': 'ladder',
+    '화학물질': 'chemical substance',
+    '누출': 'leak / spill',
+    '화재': 'fire',
+    '폭발': 'explosion',
+    '장비': 'equipment',
+    '고장': 'malfunction / failure',
+    '작업자': 'worker',
+    '현장': 'work site / construction site',
+    '건설': 'construction',
+    '공장': 'factory / facility',
+    '미착용': 'not wearing / without',
+    '부족': 'insufficient / lack of',
+    '불량': 'defective / faulty',
+    '부실': 'inadequate / poor',
+  };
+
+  let translated = cause;
+  for (const [korean, english] of Object.entries(translations)) {
+    translated = translated.replace(new RegExp(korean, 'g'), english);
+  }
+
+  return translated;
+}
+
+/**
+ * Generate detailed English prompt for AI image generation
+ * Uses actual incident details for accurate visualization
  */
 function generateImagePrompt(input: OPSInput): string {
   const typeMap: Record<string, string> = {
-    'fall': 'worker falling from height at construction site',
-    '추락': 'worker falling from height at construction site',
-    'chemical spill': 'chemical spill accident in industrial facility',
-    '화학물질 누출': 'chemical spill accident in industrial facility',
-    'fire': 'fire emergency in workplace',
-    '화재': 'fire emergency in workplace',
-    'explosion': 'explosion incident at industrial site',
-    '폭발': 'explosion incident at industrial site',
-    'equipment failure': 'equipment malfunction causing workplace accident',
-    '장비 고장': 'equipment malfunction causing workplace accident',
+    'fall': 'fall from height incident',
+    '추락': 'fall from height incident',
+    'chemical spill': 'chemical spill / hazmat incident',
+    '화학물질 누출': 'chemical spill / hazmat incident',
+    'fire': 'fire emergency',
+    '화재': 'fire emergency',
+    'explosion': 'explosion incident',
+    '폭발': 'explosion incident',
+    'equipment failure': 'equipment failure incident',
+    '장비 고장': 'equipment failure incident',
     'other': 'workplace safety incident',
     '기타': 'workplace safety incident',
   };
 
   const normalizedType = input.incidentType.toLowerCase().trim();
-  const sceneDescription = typeMap[normalizedType] || 'workplace safety incident';
+  const incidentTypeDesc = typeMap[normalizedType] || 'workplace safety incident';
 
-  // Build comprehensive prompt
+  // Translate incident cause for better AI understanding
+  const translatedCause = translateIncidentCause(input.incidentCause || '');
+
+  // Extract location context for better scene setting
+  const locationContext = input.location?.includes('건설') || input.location?.includes('현장')
+    ? 'construction site'
+    : input.location?.includes('공장') || input.location?.includes('시설')
+    ? 'industrial facility'
+    : 'workplace';
+
+  // Build highly detailed prompt with actual incident details
   const prompt = `
-    Professional safety illustration showing ${sceneDescription}.
-    Style: Clean, educational diagram with safety warning colors (yellow, orange, red).
-    Perspective: Side view showing the incident clearly.
-    Elements: Safety equipment, warning signs, clear hazard indicators.
-    Mood: Serious, educational, professional safety training material.
-    Quality: High detail, clear composition, suitable for safety documentation.
+    Professional technical safety illustration depicting a ${incidentTypeDesc} at a Korean ${locationContext}.
+
+    SPECIFIC INCIDENT DETAILS:
+    - Scenario: ${translatedCause}
+    - Location context: ${input.location || locationContext}
+    - Incident type: ${incidentTypeDesc}
+
+    VISUAL STYLE:
+    - Art style: Professional isometric technical diagram, CAD-style rendering
+    - Color scheme: OSHA standard safety colors (yellow #FFCC00 for caution, orange #FF6600 for warnings, red #CC0000 for danger)
+    - Quality: Highly detailed 8K rendering with crisp clean lines
+
+    COMPOSITION:
+    - View: Cross-section cutaway diagram showing the incident moment clearly
+    - Perspective: Isometric 3/4 view for maximum clarity and depth
+    - Focus: The exact hazardous situation described in the incident cause
+
+    TECHNICAL ELEMENTS:
+    - Safety equipment: PPE (hard hats, safety harness, protective gear) clearly visible
+    - Warning signage: Korean KOSHA safety signs and hazard markers
+    - Hazard zones: Clearly marked danger areas with safety tape and barriers
+    - Labels: Directional arrows and measurement indicators
+
+    LIGHTING & RENDERING:
+    - Studio lighting with clear shadows for depth perception
+    - Highlights on metallic safety equipment
+    - Professional technical manual illustration quality
+
+    STANDARDS COMPLIANCE:
+    - Korean industrial safety (KOSHA) manual illustration style
+    - Technical accuracy for safety training materials
+    - Suitable for professional safety documentation and reports
+
+    AVOID: Cartoonish style, blurry details, pixelated rendering, amateur sketch, overly dramatic or horror-style imagery.
+
+    PRIORITY: Accurately depict the specific incident scenario described: ${translatedCause}
   `.trim().replace(/\s+/g, ' ');
 
   return prompt;
@@ -59,7 +134,7 @@ export async function generateIllustration(
       '@cf/black-forest-labs/flux-1-schnell',
       {
         prompt: prompt,
-        num_steps: 4, // Schnell is optimized for 4 steps
+        num_steps: 8, // Maximum steps for best quality (takes longer but more accurate)
       }
     );
 
