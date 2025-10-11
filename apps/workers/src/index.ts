@@ -24,6 +24,9 @@ export interface Env {
   // KV Namespace binding
   OPS_CACHE: KVNamespace;
 
+  // Workers AI binding
+  AI: Ai;
+
   // Environment variables
   ACCESS_KEY?: string;
   EMAIL_API_KEY?: string;

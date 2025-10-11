@@ -7,6 +7,7 @@ import type { Env } from '../index';
 import type { GenerateOPSRequest, GenerateOPSResponse } from './models';
 import { composeOPS } from './composer';
 import { matchLaws } from '../law/matcher';
+import { generateIllustration } from './illustration';
 
 /**
  * Validate required fields in request
@@ -57,6 +58,20 @@ export async function handleGenerateOPS(request: Request, env: Env): Promise<Res
 
     // Compose OPS document
     const opsDocument = composeOPS(input, laws);
+
+    // Generate illustration (optional - don't fail if this fails)
+    try {
+      const illustrationUrl = await generateIllustration(input, env);
+      if (illustrationUrl) {
+        opsDocument.imageMeta = {
+          type: 'generated',
+          url: illustrationUrl,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to generate illustration, using placeholder:', error);
+      // Keep default placeholder
+    }
 
     return Response.json({
       success: true,

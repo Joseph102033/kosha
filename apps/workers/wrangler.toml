@@ -14,6 +14,10 @@ database_id = "4409b768-3430-4d91-8665-391c977897c7"
 binding = "OPS_CACHE"
 id = "03757fc4bf2e4a0e99ee6cc7eb5fa1ad"
 
+# Workers AI binding for illustration generation
+[ai]
+binding = "AI"
+
 # Environment variables (secrets should be set via: wrangler secret put <KEY>)
 [vars]
 # These are non-sensitive variables

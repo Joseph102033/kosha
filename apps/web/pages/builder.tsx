@@ -440,6 +440,30 @@ export default function Builder() {
                     {activeTab === 'summary' && (
                       <div>
                         <h3 className="text-base font-semibold mb-2">사고 개요</h3>
+
+                        {/* Illustration */}
+                        {preview.imageMeta && preview.imageMeta.type === 'generated' && preview.imageMeta.url && (
+                          <div className="mb-4 rounded-lg overflow-hidden border border-gray-200">
+                            <img
+                              src={preview.imageMeta.url}
+                              alt="재해 상황 삽화"
+                              className="w-full h-auto"
+                            />
+                            <p className="text-xs text-gray-500 p-2 bg-gray-50">
+                              🤖 AI 생성 안전 교육 삽화
+                            </p>
+                          </div>
+                        )}
+
+                        {preview.imageMeta && preview.imageMeta.type === 'placeholder' && (
+                          <div className="mb-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 p-8 text-center">
+                            <div className="text-6xl mb-2">🏗️</div>
+                            <p className="text-sm text-gray-600">
+                              삽화 생성 중... (AI 이미지 생성에는 시간이 걸릴 수 있습니다)
+                            </p>
+                          </div>
+                        )}
+
                         <p className="whitespace-pre-line text-gray-700">{preview.summary}</p>
                       </div>
                     )}
