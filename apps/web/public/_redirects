@@ -1,3 +1,5 @@
-# Cloudflare Pages redirects for dynamic routes
-# Redirect /p/{anything} to /p/[slug].html with query parameter for client-side routing
-/p/:slug /p/[slug].html 200
+# Cloudflare Pages - proxy dynamic routes to Workers
+# Public OPS pages are served by Workers (server-side rendered)
+/p/* https://safe-ops-studio-workers.yosep102033.workers.dev/p/:splat 200
+# API routes are also proxied to Workers
+/api/* https://safe-ops-studio-workers.yosep102033.workers.dev/api/:splat 200

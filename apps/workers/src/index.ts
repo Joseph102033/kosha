@@ -8,6 +8,7 @@ import { handleListSubscribers } from './subscriptions/list';
 import { handleGenerateOPS } from './ops/generate';
 import { handleSaveOPS } from './ops/save';
 import { handleGetOPS } from './ops/get';
+import { handlePublicOPSPage } from './ops/public-page';
 import {
   handleCreateLawRule,
   handleListLawRules,
@@ -189,6 +190,13 @@ export default {
           status: response.status,
           headers,
         });
+      }
+
+      // Public OPS page (server-side rendered HTML)
+      const publicOpsMatch = path.match(/^\/p\/([^\/]+)$/);
+      if (publicOpsMatch) {
+        const slug = publicOpsMatch[1];
+        return await handlePublicOPSPage(slug, env);
       }
 
       // More routes will be added here
