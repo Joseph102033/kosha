@@ -40,6 +40,7 @@ export interface SaveOPSResponse {
     id: string;
     slug: string;
     publicUrl: string;
+    opsId: string; // For email sending compatibility (same as id)
   };
   error?: string;
 }
@@ -136,6 +137,7 @@ export async function handleSaveOPS(request: Request, env: Env): Promise<Respons
         id,
         slug,
         publicUrl,
+        opsId: id, // For email sending compatibility
       },
     } as SaveOPSResponse);
   } catch (error) {

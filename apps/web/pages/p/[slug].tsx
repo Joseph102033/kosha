@@ -43,12 +43,23 @@ export default function PublicOPSPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
+    // For static export, router.query might not be immediately available
+    // Extract slug from window.location.pathname as fallback
+    let actualSlug = slug as string | undefined;
+
+    if (!actualSlug && typeof window !== 'undefined') {
+      const pathMatch = window.location.pathname.match(/\/p\/([^\/]+)/);
+      if (pathMatch) {
+        actualSlug = pathMatch[1];
+      }
+    }
+
+    if (!actualSlug) return;
 
     const fetchOPSData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/ops/${slug}`);
+        const response = await fetch(`${API_URL}/api/ops/${actualSlug}`);
 
         if (!response.ok) {
           setError(true);
