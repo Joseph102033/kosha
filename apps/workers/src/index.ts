@@ -4,6 +4,7 @@
  */
 
 import { handleSubscribe } from './subscriptions/subscribe';
+import { handleListSubscribers } from './subscriptions/list';
 import { handleGenerateOPS } from './ops/generate';
 import { handleSaveOPS } from './ops/save';
 import { handleGetOPS } from './ops/get';
@@ -72,9 +73,22 @@ export default {
         });
       }
 
-      // OPS generation endpoint (protected)
+      // List subscribers endpoint (protected)
+      if (path === '/api/subscribers') {
+        const response = await requireAuth(request, env, handleListSubscribers);
+        const headers = new Headers(response.headers);
+        Object.entries(corsHeaders).forEach(([key, value]) => {
+          headers.set(key, value);
+        });
+        return new Response(response.body, {
+          status: response.status,
+          headers,
+        });
+      }
+
+      // OPS generation endpoint (public - for real-time preview)
       if (path === '/api/ops/generate') {
-        const response = await requireAuth(request, env, handleGenerateOPS);
+        const response = await handleGenerateOPS(request, env);
         const headers = new Headers(response.headers);
         Object.entries(corsHeaders).forEach(([key, value]) => {
           headers.set(key, value);
