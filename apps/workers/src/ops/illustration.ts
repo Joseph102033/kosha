@@ -96,27 +96,79 @@ Visual style: Isometric 3/4 view, CAD-style rendering, OSHA safety colors, studi
 }
 
 /**
+ * KOSHA Style Guide (from reference analysis)
+ * Based on 6 reference images: fall_1-4, chemical_1, machine_1
+ */
+const KOSHA_STYLE_GUIDE = `
+KOSHA SAFETY MANUAL ILLUSTRATION STYLE (Reference-Based):
+
+VISUAL STYLE:
+- Semi-realistic cartoon with bold black outlines (2-3px weight)
+- Flat colors, minimal shading, no gradients on objects
+- Educational poster quality, immediately understandable
+
+COLOR PALETTE (Strictly Follow):
+- Background: Light gray (#E5E5E5) or light blue (#D8E8F5)
+- Safety helmet: Yellow (#FFD700) - ALWAYS yellow
+- Worker clothing: Blue (#4A90E2) or Gray (#7F8C8D)
+- Danger markers: Red (#FF0000) star bursts
+- Impact effects: White (#FFFFFF) cloud puffs
+- Structures: Gray tones (#95A5A6, #BDC3C7)
+
+CHARACTER DESIGN:
+- Slightly cartoonish proportions (head 1:6 body ratio)
+- Simple facial features (2 dots for eyes, line for mouth)
+- Mitten-style hands (no individual fingers)
+- Visible emotion appropriate to incident
+
+HAZARD VISUALIZATION:
+- Red star burst (⭐) at impact/contact points
+- White cloud motion effects (☁️) showing movement
+- Dotted arc lines for falling trajectories
+- Bold outlines around all danger elements
+
+COMPOSITION:
+- Single focal point at hazard moment
+- 2-3 depth layers maximum
+- Simplified background (basic shapes only)
+- Clear cause-and-effect relationship
+
+STRICT REQUIREMENTS:
+- Bold black outlines around ALL objects
+- NO photo-realistic rendering
+- NO complex shadows or lighting
+- NO text, labels, or Korean characters
+- NO detailed facial features
+- NO busy backgrounds
+- Educational clarity over artistic detail
+`.trim();
+
+/**
  * Generate detailed English prompt for AI image generation
- * Uses AI-generated scene description or falls back to template
+ * Uses AI-generated scene description with KOSHA style guide
  */
 async function generateImagePrompt(input: OPSInput, env: Env): Promise<string> {
   // Try AI-generated scene description first
   if (env.GEMINI_API_KEY) {
     const aiScene = await generateSceneDescriptionWithAI(input, env);
     if (aiScene) {
-      // Use AI-generated description
-      return `${aiScene}
+      // Use AI-generated description with strict style enforcement
+      return `${KOSHA_STYLE_GUIDE}
 
-STANDARDS COMPLIANCE:
-- Korean industrial safety (KOSHA) manual illustration style
-- Technical accuracy for safety training materials
-- Suitable for professional safety documentation and reports
+SPECIFIC SCENE (from incident analysis):
+${aiScene}
 
-AVOID: Cartoonish style, blurry details, pixelated rendering, amateur sketch, overly dramatic or horror-style imagery.`.trim();
+FINAL RENDERING REQUIREMENTS:
+- Follow KOSHA style guide exactly (see above)
+- Render as educational safety manual illustration
+- Bold black outlines, flat colors, simple shapes
+- Yellow helmet, blue/gray clothing, white impact clouds
+- Red star at hazard point
+- NO text whatsoever`.trim();
     }
   }
 
-  // Fallback to template-based prompt
+  // Fallback to template-based prompt with style guide
   return generateImagePromptFallback(input);
 }
 
@@ -152,51 +204,33 @@ function generateImagePromptFallback(input: OPSInput): string {
     ? 'industrial facility'
     : 'workplace';
 
-  // Build detailed prompt with actual incident details
-  const prompt = `
-    Professional technical safety illustration depicting a ${incidentTypeDesc} at a Korean ${locationContext}.
+  // Build detailed prompt with KOSHA style guide
+  const prompt = `${KOSHA_STYLE_GUIDE}
 
-    SPECIFIC INCIDENT DETAILS:
-    - Scenario: ${translatedCause}
-    - Location context: ${input.location || locationContext}
-    - Incident type: ${incidentTypeDesc}
+SPECIFIC INCIDENT:
+Type: ${incidentTypeDesc}
+Location: ${locationContext}
+Scenario: ${translatedCause}
 
-    VISUAL STYLE:
-    - Art style: Professional isometric technical diagram, CAD-style rendering
-    - Color scheme: OSHA standard safety colors (yellow #FFCC00 for caution, orange #FF6600 for warnings, red #CC0000 for danger)
-    - Quality: Highly detailed 8K rendering with crisp clean lines
+SCENE COMPOSITION:
+- Worker wearing yellow safety helmet and ${locationContext === 'construction site' ? 'blue' : 'gray'} work clothes
+- ${translatedCause}
+- Side view or isometric 3/4 angle
+- Simplified ${locationContext} background
+- Red star burst at hazard/impact point
+- White cloud motion effects
 
-    COMPOSITION:
-    - View: Cross-section cutaway diagram showing the incident moment clearly
-    - Perspective: Isometric 3/4 view for maximum clarity and depth
-    - Focus: The exact hazardous situation described in the incident cause
+${normalizedType.includes('fall') || normalizedType.includes('추락') ? 'FALL ELEMENTS: Worker in mid-fall, arms out, dotted fall trajectory, scaffolding/ladder visible' : ''}
+${normalizedType.includes('chemical') || normalizedType.includes('화학') ? 'CHEMICAL ELEMENTS: Wavy vapor lines, protective gear, container source visible' : ''}
 
-    TECHNICAL ELEMENTS:
-    - Safety equipment: PPE (hard hats, safety harness, protective gear) clearly visible
-    - Hazard zones: Danger areas marked with safety tape and barriers (no text labels)
-    - Visual markers: Color coding only, NO text, NO written signs, NO Korean characters, NO English text
+STYLE CHECKLIST:
+✓ Bold black outlines (2-3px)
+✓ Flat colors, no gradients
+✓ Yellow helmet visible
+✓ Simple cartoon style
+✓ NO text whatsoever
 
-    LIGHTING & RENDERING:
-    - Studio lighting with clear shadows for depth perception
-    - Highlights on metallic safety equipment
-    - Professional technical manual illustration quality
-
-    STANDARDS COMPLIANCE:
-    - Korean industrial safety (KOSHA) manual illustration style
-    - Technical accuracy for safety training materials
-    - Suitable for professional safety documentation and reports
-
-    AVOID: Cartoonish style, blurry details, pixelated rendering, amateur sketch, overly dramatic or horror-style imagery, ANY text labels, ANY written characters, ANY signs with text, ANY measurement numbers.
-
-    STRICT REQUIREMENTS:
-    - NO text of any kind in the image
-    - NO Korean characters or English letters
-    - NO warning signs with text
-    - NO labels or annotations
-    - ONLY visual elements (shapes, colors, objects)
-
-    PRIORITY: Accurately depict the specific incident scenario described: ${translatedCause}
-  `.trim().replace(/\s+/g, ' ');
+PRIORITY: ${translatedCause}`.trim().replace(/\s+/g, ' ');
 
   return prompt;
 }

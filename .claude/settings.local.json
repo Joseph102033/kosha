@@ -47,7 +47,9 @@
       "WebFetch(domain:kosha-8ad.pages.dev)",
       "WebFetch(domain:ebc9c72d.kosha-8ad.pages.dev)",
       "Bash(git commit:*)",
-      "Bash(npx wrangler:*)"
+      "Bash(npx wrangler:*)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": [],
     "ask": []
