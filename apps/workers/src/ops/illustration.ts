@@ -173,9 +173,8 @@ function generateImagePromptFallback(input: OPSInput): string {
 
     TECHNICAL ELEMENTS:
     - Safety equipment: PPE (hard hats, safety harness, protective gear) clearly visible
-    - Warning signage: Korean KOSHA safety signs and hazard markers
-    - Hazard zones: Clearly marked danger areas with safety tape and barriers
-    - Labels: Directional arrows and measurement indicators
+    - Hazard zones: Danger areas marked with safety tape and barriers (no text labels)
+    - Visual markers: Color coding only, NO text, NO written signs, NO Korean characters, NO English text
 
     LIGHTING & RENDERING:
     - Studio lighting with clear shadows for depth perception
@@ -187,7 +186,14 @@ function generateImagePromptFallback(input: OPSInput): string {
     - Technical accuracy for safety training materials
     - Suitable for professional safety documentation and reports
 
-    AVOID: Cartoonish style, blurry details, pixelated rendering, amateur sketch, overly dramatic or horror-style imagery.
+    AVOID: Cartoonish style, blurry details, pixelated rendering, amateur sketch, overly dramatic or horror-style imagery, ANY text labels, ANY written characters, ANY signs with text, ANY measurement numbers.
+
+    STRICT REQUIREMENTS:
+    - NO text of any kind in the image
+    - NO Korean characters or English letters
+    - NO warning signs with text
+    - NO labels or annotations
+    - ONLY visual elements (shapes, colors, objects)
 
     PRIORITY: Accurately depict the specific incident scenario described: ${translatedCause}
   `.trim().replace(/\s+/g, ' ');

@@ -70,6 +70,13 @@ export async function extractCausesWithAI(
   input: OPSInput,
   env: Env
 ): Promise<{ direct: string[]; indirect: string[] }> {
+  console.log('🔍 Starting cause analysis with Gemini AI...');
+
+  if (!env.GEMINI_API_KEY) {
+    console.log('⚠️ GEMINI_API_KEY not configured, using fallback');
+    return extractCausesFallback(input);
+  }
+
   const prompt = `당신은 산업안전보건 전문가입니다. 다음 재해 정보를 분석하여 구체적인 직접 원인과 간접 원인을 도출하세요.
 
 **재해 정보:**
@@ -82,14 +89,18 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
 **분석 요구사항:**
 
 1. **직접 원인 (Direct Causes)**: 재해를 직접적으로 발생시킨 즉각적인 원인 3개를 도출하세요.
-   - 재해 개요에 명시된 구체적인 상황을 반영
-   - 일반적이지 않고 이 사고에 특화된 원인
-   - 예: "안전벨트 미착용" (구체적) > "부적절한 안전 조치" (일반적)
+   - **필수**: 재해 개요에 명시된 구체적인 행동, 물건, 상황을 그대로 반영
+   - **금지**: 일반적인 표현 사용 금지 (예: "부적절한~", "불충분한~")
+   - **예시**:
+     - ❌ "부적절한 사다리 사용" → ✅ "A형 사다리를 고정하지 않고 사용"
+     - ❌ "안전장비 미착용" → ✅ "안전벨트 및 안전모 미착용"
+     - ❌ "작업발판 미설치" → ✅ "3m 높이 작업에 비계 대신 이동식 사다리 사용"
 
 2. **간접 원인 (Indirect Causes)**: 직접 원인을 야기한 근본 원인 4개를 도출하세요.
-   - 시스템, 관리, 교육, 문화적 요인
-   - 재발 방지를 위해 개선해야 할 근본 문제
-   - 예: "고위험 작업 안전 교육 부재", "안전 장비 점검 체계 미비"
+   - **구체적 시스템 결함**: "고소작업 안전교육 미실시 (최근 6개월 기준)"
+   - **구체적 관리 결함**: "작업 전 도구 점검 절차 부재"
+   - **구체적 감독 결함**: "관리감독자의 현장 안전점검 누락"
+   - **일반적 표현 최소화**: "안전의식 부족" 같은 추상적 표현 지양
 
 **출력 형식 (JSON):**
 \`\`\`json
@@ -110,22 +121,29 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
 
 **중요**: 반드시 재해 개요(${input.incidentCause})의 내용을 반영하여 구체적이고 실행 가능한 원인을 작성하세요.`;
 
+  console.log('🤖 Calling Gemini API for cause analysis...');
   const response = await callGemini(prompt, env, {
     temperature: 0.5, // Lower temperature for more consistent analysis
     maxOutputTokens: 1024,
   });
 
   if (!response) {
-    console.error('Gemini API failed for cause analysis, using fallback');
+    console.error('❌ Gemini API failed for cause analysis, using fallback');
     return extractCausesFallback(input);
   }
 
+  console.log('✅ Gemini response received for causes');
   const parsed = parseGeminiJSON<{ direct: string[]; indirect: string[] }>(response);
 
   if (!parsed || !parsed.direct || !parsed.indirect) {
-    console.error('Failed to parse Gemini causes, using fallback');
+    console.error('❌ Failed to parse Gemini causes, using fallback');
     return extractCausesFallback(input);
   }
+
+  console.log('✅ Successfully parsed Gemini causes:', {
+    directCount: parsed.direct.length,
+    indirectCount: parsed.indirect.length,
+  });
 
   // Validate array lengths
   if (parsed.direct.length < 2 || parsed.indirect.length < 2) {
@@ -188,6 +206,13 @@ export async function generateChecklistWithAI(
   input: OPSInput,
   env: Env
 ): Promise<string[]> {
+  console.log('🔍 Starting checklist generation with Gemini AI...');
+
+  if (!env.GEMINI_API_KEY) {
+    console.log('⚠️ GEMINI_API_KEY not configured, using fallback');
+    return generateChecklistFallback(input);
+  }
+
   const prompt = `당신은 산업안전보건 전문가입니다. 다음 재해 정보를 기반으로 구체적이고 실행 가능한 사고 예방 체크리스트를 작성하세요.
 
 **재해 정보:**
@@ -199,17 +224,24 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
 
 **체크리스트 작성 요구사항:**
 
-1. **구체성**: 재해 개요의 내용을 직접 반영한 구체적인 항목
-   - 나쁜 예: "안전 교육 실시" (너무 일반적)
-   - 좋은 예: "고소 작업 시 안전벨트 착용 방법 실습 교육 실시" (구체적)
+1. **최우선 핵심 조치사항** (상위 2-3개):
+   - 재해 개요에 직접 언급된 위험 요소에 대한 구체적 대응책
+   - **예시 (사다리 추락)**:
+     - ✅ "A형 사다리 상단 및 하단에 전도방지 장치(아웃트리거) 설치 확인"
+     - ✅ "2인 1조 작업: 1명은 사다리 하부 고정, 1명은 작업 수행"
+     - ✅ "사다리 설치 각도 75도 확인 (경사계 사용)"
+   - **금지**: "위험성 평가 실시", "안전 교육 실시" 같은 일반적 표현
 
-2. **실행 가능성**: 현장에서 즉시 확인하고 실행할 수 있는 항목
-   - 확인 가능한 조건 (예: "~되어 있는지 확인", "~를 점검")
-   - 측정 가능한 기준 (예: "~mm 이상", "~개 설치")
+2. **재해 유형별 필수 조치사항** (중간 3-4개):
+   - 추락: 안전난간, 개인보호구, 작업발판 등
+   - 화학물질: 환기, MSDS, 보호구 등
+   - 낙하/비래: 낙하물 방지망, 출입통제 등
 
-3. **순서**: 작업 전 → 작업 중 → 작업 후 순서로 구성
+3. **일반 관리 조치사항** (하위 2-3개):
+   - 작업 전 안전점검, 비상연락체계 등
+   - 단, 구체적으로 작성 (예: "작업반장이 체크리스트로 10분 이상 점검")
 
-4. **개수**: 6-10개 항목
+4. **개수**: 총 7-10개 항목 (핵심 3개 + 필수 4개 + 일반 3개)
 
 **출력 형식 (JSON):**
 \`\`\`json
@@ -225,29 +257,32 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
 
 **중요**: 반드시 재해 개요(${input.incidentCause})에서 발생한 구체적인 상황을 반영하세요.`;
 
+  console.log('🤖 Calling Gemini API for checklist generation...');
   const response = await callGemini(prompt, env, {
     temperature: 0.6,
     maxOutputTokens: 1024,
   });
 
   if (!response) {
-    console.error('Gemini API failed for checklist, using fallback');
+    console.error('❌ Gemini API failed for checklist, using fallback');
     return generateChecklistFallback(input);
   }
 
+  console.log('✅ Gemini response received for checklist');
   const parsed = parseGeminiJSON<{ checklist: string[] }>(response);
 
   if (!parsed || !parsed.checklist || !Array.isArray(parsed.checklist)) {
-    console.error('Failed to parse Gemini checklist, using fallback');
+    console.error('❌ Failed to parse Gemini checklist, using fallback');
     return generateChecklistFallback(input);
   }
 
   // Validate checklist length
   if (parsed.checklist.length < 4) {
-    console.error('Insufficient checklist items from Gemini, using fallback');
+    console.error('❌ Insufficient checklist items from Gemini, using fallback');
     return generateChecklistFallback(input);
   }
 
+  console.log('✅ Successfully generated checklist with', parsed.checklist.length, 'items');
   return parsed.checklist.slice(0, 10);
 }
 
