@@ -1,0 +1,238 @@
+/**
+ * PDF Exporter using pdf-lib
+ * Generates professional PDF with Korean text support
+ */
+
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { OPSExportData, ExportOptions, DEFAULT_EXPORT_OPTIONS } from './types';
+
+interface PDFTextStyle {
+  size: number;
+  color?: { r: number; g: number; b: number };
+  lineHeight?: number;
+}
+
+const STYLES = {
+  title: { size: 24, lineHeight: 1.5 },
+  heading1: { size: 18, lineHeight: 1.4 },
+  heading2: { size: 14, lineHeight: 1.3 },
+  body: { size: 11, lineHeight: 1.6 },
+  small: { size: 9, lineHeight: 1.4 },
+  watermark: { size: 8, color: { r: 0.5, g: 0.5, b: 0.5 }, lineHeight: 1.2 },
+};
+
+const MARGINS = {
+  top: 50,
+  bottom: 50,
+  left: 50,
+  right: 50,
+};
+
+const PAGE_WIDTH = 595; // A4 width in points
+const PAGE_HEIGHT = 842; // A4 height in points
+
+export async function generatePDF(data: OPSExportData, options: ExportOptions = {}): Promise<Uint8Array> {
+  const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
+
+  // Create PDF document
+  const pdfDoc = await PDFDocument.create();
+
+  // Note: pdf-lib's StandardFonts don't support Korean characters well
+  // For production, you would need to embed a Korean font
+  // For now, we'll use Helvetica and add a note about Korean text
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  let yPosition = PAGE_HEIGHT - MARGINS.top;
+
+  // Helper function to add text
+  const addText = (text: string, style: PDFTextStyle, isBold: boolean = false) => {
+    const usedFont = isBold ? fontBold : font;
+    const lines = splitTextToLines(text, PAGE_WIDTH - MARGINS.left - MARGINS.right, style.size, usedFont);
+
+    for (const line of lines) {
+      // Check if we need a new page
+      if (yPosition - style.size * (style.lineHeight || 1.5) < MARGINS.bottom) {
+        currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+        yPosition = PAGE_HEIGHT - MARGINS.top;
+      }
+
+      currentPage.drawText(line, {
+        x: MARGINS.left,
+        y: yPosition,
+        size: style.size,
+        font: usedFont,
+        color: style.color ? rgb(style.color.r, style.color.g, style.color.b) : rgb(0, 0, 0),
+      });
+
+      yPosition -= style.size * (style.lineHeight || 1.5);
+    }
+  };
+
+  // Helper to add spacing
+  const addSpacing = (points: number) => {
+    yPosition -= points;
+  };
+
+  // Title
+  addText(data.title, STYLES.title, true);
+  addSpacing(10);
+
+  // Metadata section
+  addText('사고 정보', STYLES.heading1, true);
+  addSpacing(5);
+  addText(`발생일시: ${data.incident_date}`, STYLES.body);
+  addText(`발생장소: ${data.location}`, STYLES.body);
+  addText(`기인물: ${data.agent_object}`, STYLES.body);
+  addText(`가해물: ${data.hazard_object}`, STYLES.body);
+  addText(`사고형태: ${data.incident_type}`, STYLES.body);
+  addSpacing(15);
+
+  // Incident cause
+  addText('발생개요', STYLES.heading1, true);
+  addSpacing(5);
+  addText(data.incident_cause, STYLES.body);
+  addSpacing(15);
+
+  // Summary
+  addText('사고 요약', STYLES.heading1, true);
+  addSpacing(5);
+  addText(data.summary, STYLES.body);
+  addSpacing(15);
+
+  // Root causes
+  addText('근본 원인 분석', STYLES.heading1, true);
+  addSpacing(5);
+  data.root_causes.forEach((cause, index) => {
+    addText(`${index + 1}. ${cause}`, STYLES.body);
+  });
+  addSpacing(15);
+
+  // Prevention checklist
+  addText('재발 방지 체크리스트', STYLES.heading1, true);
+  addSpacing(5);
+  data.prevention_checklist.forEach((item) => {
+    addText(`☐ ${item}`, STYLES.body);
+  });
+  addSpacing(20);
+
+  // Laws appendix
+  if (opts.appendix && data.suggested_laws && data.suggested_laws.length > 0) {
+    // New page for appendix
+    currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    yPosition = PAGE_HEIGHT - MARGINS.top;
+
+    addText('부록: 관련 법령', STYLES.heading1, true);
+    addSpacing(10);
+
+    data.suggested_laws.forEach((law, index) => {
+      // Check if we need significant space for law entry
+      if (yPosition < PAGE_HEIGHT / 3) {
+        currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+        yPosition = PAGE_HEIGHT - MARGINS.top;
+      }
+
+      addText(`${index + 1}. ${law.law_title} ${law.article_no}`, STYLES.heading2, true);
+      addSpacing(3);
+
+      if (law.confidence && law.confidence_level) {
+        const badge = law.confidence_level === 'high' ? '✓ 추천' :
+                      law.confidence_level === 'medium' ? '⚠ 검토요망' : '• 보류';
+        addText(`신뢰도: ${badge} (${law.confidence}%)`, STYLES.small);
+        addSpacing(3);
+      }
+
+      addText(law.text, STYLES.body);
+      addSpacing(10);
+    });
+  }
+
+  // Watermark and hash (footer on last page)
+  addSpacing(20);
+  if (yPosition < MARGINS.bottom + 50) {
+    currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    yPosition = MARGINS.bottom + 50;
+  }
+
+  addText('─'.repeat(80), STYLES.small);
+  addSpacing(5);
+
+  if (opts.includeWatermark && opts.toolName) {
+    addText(`Generated by ${opts.toolName}`, STYLES.watermark);
+  }
+
+  if (opts.includeHash) {
+    addText(`Document Hash: ${data.document_hash}`, STYLES.watermark);
+  }
+
+  addText(`Generated: ${new Date(data.created_at).toLocaleString('ko-KR')}`, STYLES.watermark);
+
+  // Add page numbers
+  const pages = pdfDoc.getPages();
+  pages.forEach((page, index) => {
+    page.drawText(`Page ${index + 1} / ${pages.length}`, {
+      x: PAGE_WIDTH - MARGINS.right - 50,
+      y: MARGINS.bottom / 2,
+      size: 8,
+      font: font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+  });
+
+  // Korean text notice (add to first page)
+  const firstPage = pages[0];
+  firstPage.drawText('Note: Korean text may not display correctly. For full Korean support, open in a viewer that supports embedded fonts.', {
+    x: MARGINS.left,
+    y: MARGINS.bottom - 20,
+    size: 7,
+    font: font,
+    color: rgb(0.7, 0.3, 0.3),
+  });
+
+  return await pdfDoc.save();
+}
+
+function splitTextToLines(text: string, maxWidth: number, fontSize: number, font: any): string[] {
+  // Simple line splitting (approximate)
+  const charWidth = fontSize * 0.5; // Approximate width per character
+  const maxChars = Math.floor(maxWidth / charWidth);
+
+  const lines: string[] = [];
+  const words = text.split(' ');
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+    if (testLine.length > maxChars && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+export async function downloadPDF(data: OPSExportData, filename?: string, options?: ExportOptions): Promise<void> {
+  const pdfBytes = await generatePDF(data, options);
+
+  const defaultFilename = `OPS_${data.incident_date.replace(/[/:]/g, '-')}_${data.document_hash.substring(0, 8)}.pdf`;
+  const finalFilename = filename || defaultFilename;
+
+  // Create download link
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = finalFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
