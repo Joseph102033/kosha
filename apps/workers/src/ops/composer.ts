@@ -124,7 +124,7 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
   console.log('🤖 Calling Gemini API for cause analysis...');
   const response = await callGemini(prompt, env, {
     temperature: 0.5, // Lower temperature for more consistent analysis
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048, // Increased to handle thinking tokens
   });
 
   if (!response) {
@@ -260,7 +260,7 @@ ${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
   console.log('🤖 Calling Gemini API for checklist generation...');
   const response = await callGemini(prompt, env, {
     temperature: 0.6,
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048, // Increased to handle thinking tokens
   });
 
   if (!response) {

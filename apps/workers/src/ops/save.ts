@@ -129,7 +129,9 @@ export async function handleSaveOPS(request: Request, env: Env): Promise<Respons
 
     await env.OPS_CACHE.put(`ops:${slug}`, kvValue);
 
-    const publicUrl = `/p/${slug}`;
+    // Public URL should point to Worker domain, not frontend
+    // Worker handles /p/:slug route with server-rendered HTML
+    const publicUrl = `https://safe-ops-studio-workers.yosep102033.workers.dev/p/${slug}`;
 
     return Response.json({
       success: true,

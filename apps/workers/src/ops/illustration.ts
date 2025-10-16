@@ -96,79 +96,23 @@ Visual style: Isometric 3/4 view, CAD-style rendering, OSHA safety colors, studi
 }
 
 /**
- * KOSHA Style Guide (from reference analysis)
- * Based on 6 reference images: fall_1-4, chemical_1, machine_1
+ * Compact KOSHA Style Guide for AI image generation
+ * Optimized for appropriate emotional tone in fatal accident documentation
+ *
+ * CRITICAL: Facial expressions must convey serious/distressed tone
+ * - These are fatal workplace accidents for government safety reports
+ * - Workers must show alarm/distress, NEVER smiling or happy
+ * - Reference: Official KOSHA safety manual illustrations
  */
-const KOSHA_STYLE_GUIDE = `
-KOSHA SAFETY MANUAL ILLUSTRATION STYLE (Reference-Based):
-
-VISUAL STYLE:
-- Semi-realistic cartoon with bold black outlines (2-3px weight)
-- Flat colors, minimal shading, no gradients on objects
-- Educational poster quality, immediately understandable
-
-COLOR PALETTE (Strictly Follow):
-- Background: Light gray (#E5E5E5) or light blue (#D8E8F5)
-- Safety helmet: Yellow (#FFD700) - ALWAYS yellow
-- Worker clothing: Blue (#4A90E2) or Gray (#7F8C8D)
-- Danger markers: Red (#FF0000) star bursts
-- Impact effects: White (#FFFFFF) cloud puffs
-- Structures: Gray tones (#95A5A6, #BDC3C7)
-
-CHARACTER DESIGN:
-- Slightly cartoonish proportions (head 1:6 body ratio)
-- Simple facial features (2 dots for eyes, line for mouth)
-- Mitten-style hands (no individual fingers)
-- Visible emotion appropriate to incident
-
-HAZARD VISUALIZATION:
-- Red star burst (⭐) at impact/contact points
-- White cloud motion effects (☁️) showing movement
-- Dotted arc lines for falling trajectories
-- Bold outlines around all danger elements
-
-COMPOSITION:
-- Single focal point at hazard moment
-- 2-3 depth layers maximum
-- Simplified background (basic shapes only)
-- Clear cause-and-effect relationship
-
-STRICT REQUIREMENTS:
-- Bold black outlines around ALL objects
-- NO photo-realistic rendering
-- NO complex shadows or lighting
-- NO text, labels, or Korean characters
-- NO detailed facial features
-- NO busy backgrounds
-- Educational clarity over artistic detail
-`.trim();
+const KOSHA_STYLE_COMPACT = `KOSHA safety manual: cartoon with 2px black outlines, flat colors. Yellow helmet, blue/gray work clothes, red danger zones, white cloud effects. Light gray background. NO text, NO gradients. CRITICAL: Worker's face shows DISTRESS - furrowed worried eyebrows, mouth open in alarm, eyes wide in shock. NOT smiling, NOT happy. Panicked body language (arms flailing, falling). Serious safety incident, emergency situation. Yellow star burst at impact point.`.trim();
 
 /**
  * Generate detailed English prompt for AI image generation
  * Uses AI-generated scene description with KOSHA style guide
  */
 async function generateImagePrompt(input: OPSInput, env: Env): Promise<string> {
-  // Try AI-generated scene description first
-  if (env.GEMINI_API_KEY) {
-    const aiScene = await generateSceneDescriptionWithAI(input, env);
-    if (aiScene) {
-      // Use AI-generated description with strict style enforcement
-      return `${KOSHA_STYLE_GUIDE}
-
-SPECIFIC SCENE (from incident analysis):
-${aiScene}
-
-FINAL RENDERING REQUIREMENTS:
-- Follow KOSHA style guide exactly (see above)
-- Render as educational safety manual illustration
-- Bold black outlines, flat colors, simple shapes
-- Yellow helmet, blue/gray clothing, white impact clouds
-- Red star at hazard point
-- NO text whatsoever`.trim();
-    }
-  }
-
-  // Fallback to template-based prompt with style guide
+  // Simplified approach: use compact style + incident details
+  // Skip Gemini for illustration prompt (causes MAX_TOKENS issues)
   return generateImagePromptFallback(input);
 }
 
@@ -204,33 +148,32 @@ function generateImagePromptFallback(input: OPSInput): string {
     ? 'industrial facility'
     : 'workplace';
 
-  // Build detailed prompt with KOSHA style guide
-  const prompt = `${KOSHA_STYLE_GUIDE}
+  // Build compact prompt under 2048 chars
+  let prompt = `${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${translatedCause}.`;
 
-SPECIFIC INCIDENT:
-Type: ${incidentTypeDesc}
-Location: ${locationContext}
-Scenario: ${translatedCause}
+  // Add type-specific details with emphasis on distress
+  if (normalizedType.includes('fall') || normalizedType.includes('추락')) {
+    prompt += ' Fall: worker mid-air with panicked expression, arms flailing outward, mouth open in shock, dotted motion arc, scaffolding/ladder collapsing.';
+  } else if (normalizedType.includes('chemical') || normalizedType.includes('화학')) {
+    prompt += ' Chemical emergency: worker with distressed worried face, vapor/fume lines rising, protective gear insufficient, hazard container leaking.';
+  } else if (normalizedType.includes('fire') || normalizedType.includes('화재')) {
+    prompt += ' Fire emergency: worker showing alarm, flames/smoke, urgent evacuation posture.';
+  } else {
+    prompt += ' Worker in distress, concerned facial expression, emergency situation.';
+  }
 
-SCENE COMPOSITION:
-- Worker wearing yellow safety helmet and ${locationContext === 'construction site' ? 'blue' : 'gray'} work clothes
-- ${translatedCause}
-- Side view or isometric 3/4 angle
-- Simplified ${locationContext} background
-- Red star burst at hazard/impact point
-- White cloud motion effects
+  prompt += ' Yellow star at impact, white clouds showing force, red danger area. Serious tone, NOT happy. NO text.';
 
-${normalizedType.includes('fall') || normalizedType.includes('추락') ? 'FALL ELEMENTS: Worker in mid-fall, arms out, dotted fall trajectory, scaffolding/ladder visible' : ''}
-${normalizedType.includes('chemical') || normalizedType.includes('화학') ? 'CHEMICAL ELEMENTS: Wavy vapor lines, protective gear, container source visible' : ''}
+  // Ensure under 2048 chars
+  if (prompt.length > 2040) {
+    console.warn(`⚠️ Prompt truncated from ${prompt.length} to 2040 chars`);
+    prompt = prompt.substring(0, 2040);
+  }
 
-STYLE CHECKLIST:
-✓ Bold black outlines (2-3px)
-✓ Flat colors, no gradients
-✓ Yellow helmet visible
-✓ Simple cartoon style
-✓ NO text whatsoever
-
-PRIORITY: ${translatedCause}`.trim().replace(/\s+/g, ' ');
+  console.log('📝 Illustration prompt generated:', {
+    length: prompt.length,
+    preview: prompt.substring(0, 200) + '...',
+  });
 
   return prompt;
 }

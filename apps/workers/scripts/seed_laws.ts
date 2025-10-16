@@ -1,0 +1,552 @@
+/**
+ * Seed script for Korean occupational safety laws
+ * Populates the laws table with 40+ sample articles
+ *
+ * Usage:
+ *   npx wrangler d1 execute kosha-db --local --file=./scripts/seed_laws.sql
+ *   OR
+ *   ts-node scripts/seed_laws.ts (if using local database)
+ */
+
+interface LawArticle {
+  id: string;
+  law_code: string;
+  law_title: string;
+  article_no: string;
+  clause_no: string | null;
+  text: string;
+  effective_date: string;
+  keywords: string;
+  source_url: string;
+}
+
+const SAMPLE_LAWS: LawArticle[] = [
+  // 산업안전보건법 (Industrial Safety and Health Act)
+  {
+    id: 'law-001',
+    law_code: 'KOSHA-2024-001',
+    law_title: '산업안전보건법',
+    article_no: '제38조',
+    clause_no: '제1항',
+    text: '사업주는 근로자가 추락하거나 넘어질 위험이 있는 장소, 토사·구축물 등이 붕괴할 우려가 있는 장소, 물체가 떨어지거나 날아올 위험이 있는 장소, 그 밖에 작업 시 근로자의 위험을 방지하기 위하여 필요한 장소에는 안전난간, 울타리, 수직형 추락 방망, 덮개 등 위험 방지를 위한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '추락,안전난간,울타리,방망,덮개,위험방지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-002',
+    law_code: 'KOSHA-2024-002',
+    law_title: '산업안전보건법',
+    article_no: '제38조',
+    clause_no: '제2항',
+    text: '사업주는 근로자가 해당 작업을 안전하게 수행할 수 있도록 안전모, 안전대, 안전화 등 개인보호구를 지급하고, 이를 착용하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '개인보호구,안전모,안전대,안전화,착용의무',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-003',
+    law_code: 'KOSHA-2024-003',
+    law_title: '산업안전보건법',
+    article_no: '제39조',
+    clause_no: null,
+    text: '사업주는 근로자가 작업 중 끼임, 감김, 협착 등의 위험에 노출될 우려가 있는 기계·기구·설비에 대하여 덮개, 울, 건널다리 등의 방호조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '끼임,감김,협착,기계,방호조치,덮개',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-004',
+    law_code: 'KOSHA-2024-004',
+    law_title: '산업안전보건법',
+    article_no: '제40조',
+    clause_no: null,
+    text: '사업주는 전기로 인한 화재·폭발이나 감전의 위험을 방지하기 위하여 전기 기계·기구 및 전기 배선에 대하여 필요한 안전조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '감전,전기,화재,폭발,배선,안전조치',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-005',
+    law_code: 'KOSHA-2024-005',
+    law_title: '산업안전보건법',
+    article_no: '제41조',
+    clause_no: null,
+    text: '사업주는 폭발성·발화성 물질 등으로 인하여 폭발이나 화재가 발생할 우려가 있는 장소에 대하여 화기의 사용 금지, 환기, 폭발이나 화재를 방지하기 위하여 필요한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '폭발,화재,발화성물질,환기,화기사용금지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 산업안전보건기준에 관한 규칙 (Occupational Safety and Health Standards)
+  {
+    id: 'law-006',
+    law_code: 'KOSHA-2024-006',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제42조',
+    clause_no: null,
+    text: '사업주는 작업발판의 끝이나 개구부로서 근로자가 추락할 위험이 있는 장소에는 안전난간, 울타리, 수직형 추락 방망 또는 덮개 등의 방호 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '작업발판,개구부,추락,안전난간,방호조치',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-007',
+    law_code: 'KOSHA-2024-007',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제43조',
+    clause_no: null,
+    text: '사업주는 높이 2미터 이상의 장소에서 작업을 하는 경우에 추락 위험이 있는 근로자에게 안전대를 착용하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '고소작업,2미터,안전대,착용의무,추락방지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-008',
+    law_code: 'KOSHA-2024-008',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제55조',
+    clause_no: '제1항',
+    text: '사업주는 사다리식 통로를 설치하는 경우 사다리가 넘어지거나 미끄러지는 것을 방지하기 위하여 사다리 상단을 걸어 고정시키거나 사다리 하단에 미끄럼 방지 장치를 부착하는 등 필요한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '사다리,미끄럼방지,고정,전도방지,통로',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-009',
+    law_code: 'KOSHA-2024-009',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제55조',
+    clause_no: '제2항',
+    text: '사업주는 사다리식 통로의 기울기를 75도 이하로 하여야 한다. 다만, 고정식 사다리식 통로의 기울기는 90도 이하로 할 수 있으며, 그 높이가 7미터 이상인 경우에는 바닥으로부터 높이가 2.5미터 되는 지점부터 등받이 울을 설치하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '사다리,기울기,75도,등받이울,고정식',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-010',
+    law_code: 'KOSHA-2024-010',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제87조',
+    clause_no: null,
+    text: '사업주는 프레스 등을 사용하여 작업을 할 때 작업 시작 전에 안전장치, 급정지장치, 클러치 및 브레이크 등의 기능을 점검하고 이상이 발견되면 즉시 보수하거나 교환하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '프레스,안전장치,급정지장치,점검,클러치,브레이크',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 전기 안전
+  {
+    id: 'law-011',
+    law_code: 'KOSHA-2024-011',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제301조',
+    clause_no: null,
+    text: '사업주는 전기 기계·기구를 설치 또는 이전하거나 전기 기계·기구의 전로를 변경 또는 수리하는 작업을 할 때에는 해당 전로를 차단하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '전기,전로차단,설치,수리,감전방지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-012',
+    law_code: 'KOSHA-2024-012',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제302조',
+    clause_no: null,
+    text: '사업주는 충전전로를 차단하여 작업을 하는 경우 개폐기에 타인이 송전할 수 없도록 잠금장치를 하고 "작업 중", "조작금지" 등의 표지판을 설치하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '충전전로,잠금장치,표지판,조작금지,송전방지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-013',
+    law_code: 'KOSHA-2024-013',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제303조',
+    clause_no: null,
+    text: '사업주는 근로자가 전기 작업을 할 때 감전의 위험을 방지하기 위하여 절연용 보호구를 착용하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '전기작업,절연용보호구,감전방지,착용의무',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-014',
+    law_code: 'KOSHA-2024-014',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제309조',
+    clause_no: null,
+    text: '사업주는 전기 기계·기구의 충전부분에 대하여 감전을 방지하기 위하여 절연덮개를 설치하는 등 방호 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '충전부,절연덮개,감전방지,방호조치',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 화학물질 및 폭발
+  {
+    id: 'law-015',
+    law_code: 'KOSHA-2024-015',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제420조',
+    clause_no: null,
+    text: '사업주는 위험물을 제조하거나 취급하는 경우 해당 작업장에는 관계 근로자가 아닌 사람의 출입을 금지하고 그 내용을 보기 쉬운 장소에 게시하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '위험물,출입금지,작업장,게시,관계근로자',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-016',
+    law_code: 'KOSHA-2024-016',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제421조',
+    clause_no: null,
+    text: '사업주는 폭발성 물질, 발화성 물질 등을 제조하거나 취급하는 작업을 하는 경우 해당 장소에서는 화기를 사용하지 못하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '폭발성물질,발화성물질,화기사용금지,취급',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-017',
+    law_code: 'KOSHA-2024-017',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제422조',
+    clause_no: null,
+    text: '사업주는 위험물을 저장 또는 취급하는 탱크에는 해당 위험물의 종류·최대수량 및 화기 취급 금지 등의 사항을 보기 쉬운 곳에 명시하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '위험물,탱크,저장,표시,최대수량,화기금지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-018',
+    law_code: 'KOSHA-2024-018',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제450조',
+    clause_no: null,
+    text: '사업주는 화학설비 또는 그 배관을 개조·수리·청소 등의 작업을 할 때에는 사전에 그 내부의 가스·증기 또는 분진 등을 배출하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '화학설비,배관,개조,수리,청소,가스배출',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 화재 예방
+  {
+    id: 'law-019',
+    law_code: 'KOSHA-2024-019',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제231조',
+    clause_no: null,
+    text: '사업주는 용접·용단 작업을 할 때 인화성 가스 등이 있는 장소에서는 작업을 시작하기 전에 해당 가스 등의 농도를 측정하여 폭발 또는 화재의 위험이 없음을 확인한 후 작업하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '용접,용단,인화성가스,농도측정,폭발방지,화재방지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-020',
+    law_code: 'KOSHA-2024-020',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제232조',
+    clause_no: null,
+    text: '사업주는 용접·용단 작업을 하는 장소에는 소화설비를 설치하고, 인화성 물질을 제거하거나 방화포로 덮는 등 화재 예방을 위한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '용접,용단,소화설비,방화포,화재예방,인화성물질',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 건설 안전
+  {
+    id: 'law-021',
+    law_code: 'KOSHA-2024-021',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제56조',
+    clause_no: null,
+    text: '사업주는 비계를 조립·해체하거나 변경하는 작업을 하는 경우에 작업을 지휘할 사람을 선임하여 작업순서와 작업 방법을 결정하고 작업을 지휘하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '비계,조립,해체,작업지휘,작업순서,안전관리',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-022',
+    law_code: 'KOSHA-2024-022',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제57조',
+    clause_no: null,
+    text: '사업주는 비계의 조립·해체 또는 변경 작업을 하는 경우에 근로자가 안전대 또는 안전그물 등 추락 방지를 위한 조치를 하지 아니하고 작업하도록 하여서는 아니 된다.',
+    effective_date: '2024-01-01',
+    keywords: '비계,안전대,안전그물,추락방지,조립작업',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-023',
+    law_code: 'KOSHA-2024-023',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제58조',
+    clause_no: null,
+    text: '사업주는 강관비계를 조립하는 경우 비계기둥의 밑부분에는 밑받침 철물을 사용하고, 깔판·깔목 등을 사용하여 비계기둥이 침하되는 것을 방지하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '강관비계,밑받침철물,깔판,침하방지,비계기둥',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 중장비 및 양중기
+  {
+    id: 'law-024',
+    law_code: 'KOSHA-2024-024',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제134조',
+    clause_no: null,
+    text: '사업주는 크레인을 사용하여 작업을 하는 경우 해당 작업을 지휘하는 사람을 배치하고, 신호하는 사람과 운전하는 사람 간에 미리 정한 신호 방법에 따라 작업하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '크레인,작업지휘,신호수,운전자,신호방법',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-025',
+    law_code: 'KOSHA-2024-025',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제135조',
+    clause_no: null,
+    text: '사업주는 크레인의 과부하로 인한 전도 등의 위험을 방지하기 위하여 정격하중을 초과하여 사용해서는 아니 된다.',
+    effective_date: '2024-01-01',
+    keywords: '크레인,과부하,정격하중,전도방지,하중초과금지',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-026',
+    law_code: 'KOSHA-2024-026',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제136조',
+    clause_no: null,
+    text: '사업주는 크레인의 와이어로프가 꼬이거나 현저히 손상되거나 부식된 경우에는 즉시 교환하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '크레인,와이어로프,교환,손상,부식,안전검사',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 밀폐공간
+  {
+    id: 'law-027',
+    law_code: 'KOSHA-2024-027',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제618조',
+    clause_no: null,
+    text: '사업주는 밀폐공간에서 근로자에게 작업을 하도록 하는 경우 작업을 시작하기 전에 해당 밀폐공간의 산소 및 유해가스 농도를 측정하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '밀폐공간,산소농도,유해가스,농도측정,작업전점검',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-028',
+    law_code: 'KOSHA-2024-028',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제619조',
+    clause_no: null,
+    text: '사업주는 밀폐공간에서 작업을 하는 경우 근로자에게 공기호흡기 또는 송기마스크를 지급하여 착용하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '밀폐공간,공기호흡기,송기마스크,착용의무,보호구',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+  {
+    id: 'law-029',
+    law_code: 'KOSHA-2024-029',
+    law_title: '산업안전보건기준에 관한 규칙',
+    article_no: '제620조',
+    clause_no: null,
+    text: '사업주는 밀폐공간에서 작업을 하는 경우 근로자를 상시 감시할 수 있는 감시자를 밖에 배치하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '밀폐공간,감시자,상시감시,작업감독,비상대응',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234640#0000'
+  },
+
+  // 안전교육
+  {
+    id: 'law-030',
+    law_code: 'KOSHA-2024-030',
+    law_title: '산업안전보건법',
+    article_no: '제29조',
+    clause_no: '제1항',
+    text: '사업주는 소속 근로자에게 정기적으로 안전·보건에 관한 교육을 실시하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '안전교육,보건교육,정기교육,근로자교육',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-031',
+    law_code: 'KOSHA-2024-031',
+    law_title: '산업안전보건법',
+    article_no: '제29조',
+    clause_no: '제2항',
+    text: '사업주는 근로자를 채용할 때와 작업내용을 변경할 때에는 그 근로자에게 안전·보건에 관한 교육을 실시하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '신규교육,채용시교육,작업변경,안전교육',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 작업환경 측정
+  {
+    id: 'law-032',
+    law_code: 'KOSHA-2024-032',
+    law_title: '산업안전보건법',
+    article_no: '제125조',
+    clause_no: null,
+    text: '사업주는 인체에 해로운 작업을 하는 작업장에 대하여 작업환경측정을 정기적으로 실시하고 그 결과를 기록·보존하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '작업환경측정,정기측정,유해작업,측정결과,기록보존',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-033',
+    law_code: 'KOSHA-2024-033',
+    law_title: '산업안전보건법',
+    article_no: '제126조',
+    clause_no: null,
+    text: '사업주는 작업환경측정 결과 근로자의 건강을 유지하기 위하여 필요하다고 인정될 때에는 시설·설비의 설치·개선 또는 건강진단의 실시 등 적절한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '작업환경,개선조치,시설개선,건강진단,사후조치',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 건강검진
+  {
+    id: 'law-034',
+    law_code: 'KOSHA-2024-034',
+    law_title: '산업안전보건법',
+    article_no: '제129조',
+    clause_no: null,
+    text: '사업주는 근로자의 건강관리를 위하여 근로자에 대한 건강진단을 실시하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '건강진단,건강관리,근로자건강,정기검진',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-035',
+    law_code: 'KOSHA-2024-035',
+    law_title: '산업안전보건법',
+    article_no: '제130조',
+    clause_no: null,
+    text: '사업주는 건강진단 결과 근로자의 건강을 유지하기 위하여 필요하다고 인정될 때에는 작업 장소 변경, 작업 전환, 근로시간 단축 등 적절한 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '건강진단,사후조치,작업전환,근로시간단축,작업장변경',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 안전보건관리책임자
+  {
+    id: 'law-036',
+    law_code: 'KOSHA-2024-036',
+    law_title: '산업안전보건법',
+    article_no: '제15조',
+    clause_no: null,
+    text: '사업주는 사업장에 안전보건관리책임자를 두어 안전·보건에 관한 업무를 총괄 관리하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '안전보건관리책임자,총괄관리,안전관리,사업장',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-037',
+    law_code: 'KOSHA-2024-037',
+    law_title: '산업안전보건법',
+    article_no: '제16조',
+    clause_no: null,
+    text: '사업주는 사업장에 안전관리자를 두어 안전에 관한 기술적인 사항에 관하여 안전보건관리책임자를 보좌하고 안전에 관한 관리업무를 수행하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '안전관리자,안전업무,기술지원,보좌역할',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-038',
+    law_code: 'KOSHA-2024-038',
+    law_title: '산업안전보건법',
+    article_no: '제17조',
+    clause_no: null,
+    text: '사업주는 사업장에 보건관리자를 두어 보건에 관한 기술적인 사항에 관하여 안전보건관리책임자를 보좌하고 보건에 관한 관리업무를 수행하도록 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '보건관리자,보건업무,건강관리,위생관리',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 유해위험 방지계획서
+  {
+    id: 'law-039',
+    law_code: 'KOSHA-2024-039',
+    law_title: '산업안전보건법',
+    article_no: '제42조',
+    clause_no: null,
+    text: '일정 규모 이상의 건설공사를 하려는 사업주는 공사를 시작하기 전에 유해·위험 방지계획서를 작성하여 고용노동부장관에게 제출·심사를 받아야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '방지계획서,건설공사,사전심사,유해위험,고용노동부',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-040',
+    law_code: 'KOSHA-2024-040',
+    law_title: '산업안전보건법',
+    article_no: '제43조',
+    clause_no: null,
+    text: '사업주는 유해·위험 방지계획서의 내용을 변경하려면 고용노동부장관의 확인을 받아야 한다. 다만, 경미한 사항을 변경하는 경우는 제외한다.',
+    effective_date: '2024-01-01',
+    keywords: '방지계획서,변경확인,내용변경,고용노동부',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+
+  // 위험성 평가
+  {
+    id: 'law-041',
+    law_code: 'KOSHA-2024-041',
+    law_title: '산업안전보건법',
+    article_no: '제36조',
+    clause_no: null,
+    text: '사업주는 건설물, 기계·기구·설비, 원재료, 가스, 증기, 분진 등에 의하거나 작업행동 등에 따르는 유해·위험 요인을 찾아내어 부상 및 질병으로 이어질 수 있는 위험성의 크기를 추정·결정하고, 그 결과에 따라 이 법과 이 법에 따른 명령에 따른 조치를 하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '위험성평가,유해위험요인,위험성추정,안전조치,사전예방',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  },
+  {
+    id: 'law-042',
+    law_code: 'KOSHA-2024-042',
+    law_title: '산업안전보건법',
+    article_no: '제37조',
+    clause_no: null,
+    text: '사업주는 위험성평가를 실시한 경우 실시 내용 및 결과를 고용노동부령으로 정하는 바에 따라 기록·보존하여야 한다.',
+    effective_date: '2024-01-01',
+    keywords: '위험성평가,기록보존,평가결과,문서화,이력관리',
+    source_url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=234639#0000'
+  }
+];
+
+// Generate SQL INSERT statements
+function generateSeedSQL(): string {
+  const insertStatements = SAMPLE_LAWS.map(law => {
+    const values = [
+      `'${law.id}'`,
+      `'${law.law_code}'`,
+      `'${law.law_title.replace(/'/g, "''")}'`,
+      `'${law.article_no}'`,
+      law.clause_no ? `'${law.clause_no}'` : 'NULL',
+      `'${law.text.replace(/'/g, "''")}'`,
+      `'${law.effective_date}'`,
+      `'${law.keywords}'`,
+      `'${law.source_url}'`
+    ].join(', ');
+
+    return `INSERT INTO laws (id, law_code, law_title, article_no, clause_no, text, effective_date, keywords, source_url) VALUES (${values});`;
+  }).join('\n');
+
+  return `-- Seed data for laws table
+-- Generated: ${new Date().toISOString()}
+-- Total records: ${SAMPLE_LAWS.length}
+
+${insertStatements}
+
+-- Verify insert
+SELECT COUNT(*) as total_laws FROM laws;
+SELECT law_title, COUNT(*) as article_count FROM laws GROUP BY law_title;
+`;
+}
+
+// Write SQL file
+const sqlContent = generateSeedSQL();
+console.log('Generated seed SQL with', SAMPLE_LAWS.length, 'law articles');
+console.log('\nSQL Preview (first 500 chars):');
+console.log(sqlContent.substring(0, 500) + '...\n');
+
+// Export for use
+export { SAMPLE_LAWS, generateSeedSQL };

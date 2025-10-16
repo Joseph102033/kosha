@@ -1,40 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { fetchWithAuth, getAccessKey, setAccessKey } from '../lib/auth';
+import type { OPSFormData, OPSDocument } from '../lib/schemas/ops';
+import { isFormReadyForPreview, validateOPSDocument } from '../lib/schemas/ops';
+import { generateDummyOPS } from '../lib/dummy-ops';
+import Preview, { PreviewState } from '../components/Preview';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safe-ops-studio-workers.yosep102033.workers.dev';
 
-interface OPSFormData {
-  title: string;
-  incidentDate: string;
-  location: string;
-  agentObject: string;
-  hazardObject: string;
-  incidentType: string;
-  incidentCause: string;
-}
-
-interface LawReference {
-  title: string;
-  url: string;
-}
-
-interface OPSDocument {
-  summary: string;
-  causes: {
-    direct: string[];
-    indirect: string[];
-  };
-  checklist: string[];
-  laws: LawReference[];
-  imageMeta?: {
-    type: 'placeholder' | 'generated';
-    url?: string;
-  };
-}
-
 export default function Builder() {
-  const [formData, setFormData] = useState<OPSFormData>({
+  const [formData, setFormData] = useState<Partial<OPSFormData>>({
     title: '',
     incidentDate: '',
     location: '',
@@ -44,10 +19,15 @@ export default function Builder() {
     incidentCause: '',
   });
 
+  // Preview state machine: idle → skeleton → dummy → generating → ready/error
+  const [previewState, setPreviewState] = useState<PreviewState>('idle');
   const [preview, setPreview] = useState<OPSDocument | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'summary' | 'causes' | 'checklist' | 'laws'>('summary');
+
+  // Debounce timer ref
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dummyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Publish state
   const [isPublishing, setIsPublishing] = useState(false);
@@ -77,14 +57,40 @@ export default function Builder() {
     setHasAccessKey(!!getAccessKey());
   }, []);
 
-  // Debounced preview generation
+  // Preview generation with skeleton → dummy → real data flow
   useEffect(() => {
-    const generatePreview = async () => {
-      setIsGenerating(true);
+    // Clear existing timers
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (dummyTimerRef.current) {
+      clearTimeout(dummyTimerRef.current);
+    }
+
+    // Check if form is ready for preview
+    if (!isFormReadyForPreview(formData)) {
+      setPreviewState('idle');
+      setPreview(null);
       setError(null);
+      return;
+    }
+
+    // Step 1: Show skeleton immediately
+    setPreviewState('skeleton');
+    setError(null);
+
+    // Step 2: Show dummy data after 300ms (fast feedback)
+    dummyTimerRef.current = setTimeout(() => {
+      const dummyData = generateDummyOPS(formData);
+      setPreview(dummyData);
+      setPreviewState('dummy');
+    }, 300);
+
+    // Step 3: Generate real data after 1 second debounce
+    debounceTimerRef.current = setTimeout(async () => {
+      setPreviewState('generating');
 
       try {
-        // Use regular fetch (no auth required for preview)
         const response = await fetch(`${API_URL}/api/ops/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -94,25 +100,40 @@ export default function Builder() {
         const data = await response.json();
 
         if (data.success && data.data) {
-          setPreview(data.data);
+          // Validate with Zod schema
+          const validation = validateOPSDocument(data.data);
+          if (validation.success) {
+            setPreview(validation.data);
+            setPreviewState('ready');
+            setError(null);
+          } else {
+            console.error('OPS validation failed:', validation.error);
+            // Fall back to dummy data on validation error
+            setPreviewState('dummy');
+            setError('Data validation warning: ' + validation.error);
+          }
         } else {
+          // API error: keep dummy data and show error
           setError(data.error || 'Failed to generate preview');
+          setPreviewState('dummy');
         }
       } catch (err) {
         console.error('Preview generation error:', err);
-        setError('Network error: Unable to connect to API');
-      } finally {
-        setIsGenerating(false);
+        // Network error: keep dummy data as fallback
+        setError('Network error: Using offline preview');
+        setPreviewState('dummy');
+      }
+    }, 1000);
+
+    // Cleanup timers
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (dummyTimerRef.current) {
+        clearTimeout(dummyTimerRef.current);
       }
     };
-
-    const timer = setTimeout(() => {
-      if (formData.incidentDate && formData.location && formData.incidentType && formData.incidentCause) {
-        generatePreview();
-      }
-    }, 1000); // 1 second debounce
-
-    return () => clearTimeout(timer);
   }, [formData]);
 
   const handleInputChange = (field: keyof OPSFormData, value: string) => {
@@ -125,8 +146,14 @@ export default function Builder() {
       return;
     }
 
-    if (!formData.title.trim()) {
+    if (!formData.title || !formData.title.trim()) {
       setPublishError('Please enter a title for this OPS document');
+      return;
+    }
+
+    // Ensure all required fields are present
+    if (!formData.incidentDate || !formData.location || !formData.incidentType || !formData.incidentCause) {
+      setPublishError('Please fill all required fields');
       return;
     }
 
@@ -141,8 +168,8 @@ export default function Builder() {
           title: formData.title,
           incidentDate: formData.incidentDate,
           location: formData.location,
-          agentObject: formData.agentObject,
-          hazardObject: formData.hazardObject,
+          agentObject: formData.agentObject || '',
+          hazardObject: formData.hazardObject || '',
           incidentType: formData.incidentType,
           incidentCause: formData.incidentCause,
           opsDocument: preview,
@@ -393,7 +420,7 @@ export default function Builder() {
                   <input
                     type="text"
                     id="title"
-                    value={formData.title}
+                    value={formData.title || ''}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="예: 비계 추락사고 - 2025년 1월"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -409,7 +436,7 @@ export default function Builder() {
                   <input
                     type="datetime-local"
                     id="incidentDate"
-                    value={formData.incidentDate}
+                    value={formData.incidentDate || ''}
                     onChange={(e) => handleInputChange('incidentDate', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
@@ -424,7 +451,7 @@ export default function Builder() {
                   <input
                     type="text"
                     id="location"
-                    value={formData.location}
+                    value={formData.location || ''}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     placeholder="예: 서울 건설현장 A동"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -440,7 +467,7 @@ export default function Builder() {
                   <input
                     type="text"
                     id="agentObject"
-                    value={formData.agentObject}
+                    value={formData.agentObject || ''}
                     onChange={(e) => handleInputChange('agentObject', e.target.value)}
                     placeholder="예: 작업자, 기계 조작자"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -455,7 +482,7 @@ export default function Builder() {
                   <input
                     type="text"
                     id="hazardObject"
-                    value={formData.hazardObject}
+                    value={formData.hazardObject || ''}
                     onChange={(e) => handleInputChange('hazardObject', e.target.value)}
                     placeholder="예: 비계, 화학물질 용기"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -469,7 +496,7 @@ export default function Builder() {
                   </label>
                   <select
                     id="incidentType"
-                    value={formData.incidentType}
+                    value={formData.incidentType || ''}
                     onChange={(e) => handleInputChange('incidentType', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
@@ -491,7 +518,7 @@ export default function Builder() {
                   </label>
                   <textarea
                     id="incidentCause"
-                    value={formData.incidentCause}
+                    value={formData.incidentCause || ''}
                     onChange={(e) => handleInputChange('incidentCause', e.target.value)}
                     placeholder="재해의 주요 원인을 상세히 기술해 주세요..."
                     rows={4}
@@ -501,24 +528,18 @@ export default function Builder() {
                 </div>
 
                 {/* Status Indicator */}
-                <div className="flex items-center gap-2 text-sm">
-                  {isGenerating && (
-                    <span className="text-blue-600">⏳ 미리보기 생성 중...</span>
-                  )}
-                  {error && (
-                    <span className="text-red-600">⚠️ {error}</span>
-                  )}
-                  {preview && !isGenerating && !error && (
-                    <span className="text-green-600">✓ 미리보기 생성 완료</span>
-                  )}
-                </div>
+                {error && (
+                  <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+                    ⚠️ {error}
+                  </div>
+                )}
 
                 {/* Publish Button */}
                 <div className="pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={handlePublish}
-                    disabled={isPublishing || !preview || !formData.title.trim()}
+                    disabled={isPublishing || !preview || !formData.title?.trim()}
                     className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors"
                   >
                     {isPublishing ? '📤 발행 중...' : '📤 OPS 문서 발행'}
@@ -530,131 +551,14 @@ export default function Builder() {
               </form>
             </div>
 
-            {/* Right: Live Preview */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">실시간 미리보기</h2>
-
-              {!preview && (
-                <div className="text-center py-12 text-gray-400">
-                  <p>폼을 작성하면 미리보기가 표시됩니다</p>
-                </div>
-              )}
-
-              {preview && (
-                <div>
-                  {/* Tabs */}
-                  <div className="border-b border-gray-200 mb-4">
-                    <nav className="flex -mb-px space-x-4">
-                      {(['summary', 'causes', 'checklist', 'laws'] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          onClick={() => setActiveTab(tab)}
-                          className={`py-2 px-3 text-sm font-medium border-b-2 transition-colors ${
-                            activeTab === tab
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          {tab === 'summary' && '요약'}
-                          {tab === 'causes' && '원인 분석'}
-                          {tab === 'checklist' && '재발방지 체크리스트'}
-                          {tab === 'laws' && '관련 법령'}
-                        </button>
-                      ))}
-                    </nav>
-                  </div>
-
-                  {/* Tab Content */}
-                  <div className="prose prose-sm max-w-none">
-                    {activeTab === 'summary' && (
-                      <div>
-                        <h3 className="text-base font-semibold mb-2">사고 개요</h3>
-
-                        {/* Illustration */}
-                        {preview.imageMeta && preview.imageMeta.type === 'generated' && preview.imageMeta.url && (
-                          <div className="mb-4 rounded-lg overflow-hidden border border-gray-200">
-                            <img
-                              src={preview.imageMeta.url}
-                              alt="재해 상황 삽화"
-                              className="w-full h-auto"
-                            />
-                            <p className="text-xs text-gray-500 p-2 bg-gray-50">
-                              🤖 AI 생성 안전 교육 삽화
-                            </p>
-                          </div>
-                        )}
-
-                        {preview.imageMeta && preview.imageMeta.type === 'placeholder' && (
-                          <div className="mb-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 p-8 text-center">
-                            <div className="text-6xl mb-2">🏗️</div>
-                            <p className="text-sm text-gray-600">
-                              삽화 생성 중... (AI 이미지 생성에는 시간이 걸릴 수 있습니다)
-                            </p>
-                          </div>
-                        )}
-
-                        <p className="whitespace-pre-line text-gray-700">{preview.summary}</p>
-                      </div>
-                    )}
-
-                    {activeTab === 'causes' && (
-                      <div>
-                        <div className="mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-2">직접 원인</h4>
-                          <ul className="list-disc list-inside space-y-1">
-                            {preview.causes.direct.map((cause, idx) => (
-                              <li key={idx} className="text-gray-700">{cause}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-900 mb-2">간접 원인</h4>
-                          <ul className="list-disc list-inside space-y-1">
-                            {preview.causes.indirect.map((cause, idx) => (
-                              <li key={idx} className="text-gray-700">{cause}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === 'checklist' && (
-                      <div>
-                        <h3 className="text-base font-semibold mb-2">재발방지 체크리스트</h3>
-                        <ul className="space-y-2">
-                          {preview.checklist.map((item, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <input type="checkbox" className="mt-1" disabled />
-                              <span className="text-gray-700">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {activeTab === 'laws' && (
-                      <div>
-                        <h3 className="text-base font-semibold mb-2">관련 법령 및 규정</h3>
-                        <ul className="space-y-2">
-                          {preview.laws.map((law, idx) => (
-                            <li key={idx} className="border-l-2 border-blue-500 pl-3">
-                              <a
-                                href={law.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline font-medium"
-                              >
-                                {law.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Right: Live Preview - Use Preview Component */}
+            <Preview
+              state={previewState}
+              data={preview}
+              error={error}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
         </div>
 

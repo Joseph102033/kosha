@@ -1,0 +1,13 @@
+{
+  "/_app": "pages/_app.js",
+  "/_document": "pages/_document.js",
+  "/admin/eval": "pages/admin/eval.html",
+  "/admin/laws": "pages/admin/laws.html",
+  "/builder": "pages/builder.html",
+  "/illustration-demo": "pages/illustration-demo.html",
+  "/": "pages/index.html",
+  "/p/[slug]": "pages/p/[slug].html",
+  "/_error": "pages/_error.js",
+  "/test-export": "pages/test-export.html",
+  "/404": "pages/404.html"
+}

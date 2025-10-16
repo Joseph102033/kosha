@@ -1,0 +1,7 @@
+{
+  "summary": "3층 건물 외벽 작업 중 안전대 미착용으로 추락",
+  "incident_type": "추락",
+  "causative_object": "안전대",
+  "work_process": "외벽 작업",
+  "limit": 3
+}

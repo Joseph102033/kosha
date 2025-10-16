@@ -16,6 +16,10 @@ import {
   handleUpdateLawRule,
   handleDeleteLawRule,
 } from './law/rules';
+import { searchLaws, getLawById, getLawTitles, getLawStats } from './law/search';
+import { suggestLaws, getRuleVersion } from './law/suggest';
+import { saveLawFeedback, getLawFeedback } from './law/feedback';
+import { generateDocumentHash } from './utils/hash';
 import { handleSend } from './delivery/send';
 import { requireAuth } from './auth/middleware';
 
@@ -191,6 +195,316 @@ export default {
           headers,
         });
       }
+
+      // Law search endpoint (public - read-only)
+      if (path === '/api/laws/search') {
+        try {
+          const queryParams = Object.fromEntries(url.searchParams);
+          const searchParams = {
+            query: queryParams.query || '',
+            page: parseInt(queryParams.page || '1'),
+            limit: parseInt(queryParams.limit || '20'),
+            law_title: queryParams.law_title,
+            article_no: queryParams.article_no,
+          };
+
+          const result = await searchLaws(env.DB, searchParams);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: result
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Law search error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to search laws'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Law suggestion endpoint (public - hybrid scoring) - MUST come before lawIdMatch
+      if (path === '/api/laws/suggest' && request.method === 'POST') {
+        try {
+          const body = await request.json() as {
+            summary?: string;
+            incident_type?: string;
+            causative_object?: string;
+            work_process?: string;
+            limit?: number;
+          };
+
+          const result = await suggestLaws(env.DB, body);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: result
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Law suggestion error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to suggest laws'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Get law titles (public - read-only) - specific route before wildcard
+      if (path === '/api/laws/titles') {
+        try {
+          const titles = await getLawTitles(env.DB);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: titles
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Get law titles error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get law titles'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Get law statistics (public - read-only) - specific route before wildcard
+      if (path === '/api/laws/stats') {
+        try {
+          const stats = await getLawStats(env.DB);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: stats
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Get law stats error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get law statistics'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Get law rule version (public - metadata) - specific route before wildcard
+      if (path === '/api/laws/rule-version') {
+        try {
+          const version = getRuleVersion();
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: version
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Get rule version error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get rule version'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Save law feedback (public - anonymous) - POST
+      if (path === '/api/feedback/laws' && request.method === 'POST') {
+        try {
+          const body = await request.json() as {
+            summary?: string;
+            incident_type?: string;
+            causative_object?: string;
+            work_process?: string;
+            selections: Array<{
+              law_id: string;
+              included: boolean;
+              order: number;
+              feedback_reason?: string;
+            }>;
+          };
+
+          // Validate selections
+          if (!body.selections || !Array.isArray(body.selections)) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: 'Invalid selections format'
+            }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const result = await saveLawFeedback(env.OPS_CACHE, {
+            summary: body.summary,
+            incident_type: body.incident_type,
+            causative_object: body.causative_object,
+            work_process: body.work_process,
+            selections: body.selections,
+          });
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: result
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Save law feedback error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to save feedback'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Get law feedback by document hash (public - read) - GET
+      if (path === '/api/feedback/laws' && request.method === 'GET') {
+        try {
+          const documentHash = url.searchParams.get('hash');
+
+          if (!documentHash) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: 'Missing document hash parameter'
+            }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const feedback = await getLawFeedback(env.OPS_CACHE, documentHash);
+
+          if (!feedback) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: 'Feedback not found'
+            }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: feedback
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Get law feedback error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get feedback'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Generate document hash (helper endpoint for client) - POST
+      if (path === '/api/feedback/hash' && request.method === 'POST') {
+        try {
+          const body = await request.json() as {
+            summary?: string;
+            incident_type?: string;
+            causative_object?: string;
+            work_process?: string;
+          };
+
+          const hash = await generateDocumentHash({
+            summary: body.summary,
+            incident_type: body.incident_type,
+            causative_object: body.causative_object,
+            work_process: body.work_process,
+          });
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: { document_hash: hash }
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Generate document hash error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to generate hash'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Get law by ID (public - read-only) - wildcard route MUST be last
+      const lawIdMatch = path.match(/^\/api\/laws\/([^\/]+)$/);
+      if (lawIdMatch) {
+        try {
+          const lawId = lawIdMatch[1];
+          const law = await getLawById(env.DB, lawId);
+
+          if (!law) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: 'Law not found'
+            }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: law
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Get law error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get law'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
 
       // Public OPS page (server-side rendered HTML)
       const publicOpsMatch = path.match(/^\/p\/([^\/]+)$/);

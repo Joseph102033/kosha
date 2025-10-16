@@ -226,8 +226,8 @@ export async function downloadPDF(data: OPSExportData, filename?: string, option
   const defaultFilename = `OPS_${data.incident_date.replace(/[/:]/g, '-')}_${data.document_hash.substring(0, 8)}.pdf`;
   const finalFilename = filename || defaultFilename;
 
-  // Create download link
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  // Create download link - TypeScript requires explicit ArrayBuffer cast
+  const blob = new Blob([pdfBytes as unknown as ArrayBuffer], { type: 'application/pdf' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = finalFilename;

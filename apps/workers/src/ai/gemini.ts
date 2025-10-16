@@ -97,12 +97,21 @@ export async function callGemini(
 
     if (!data.candidates || data.candidates.length === 0) {
       console.error('No candidates in Gemini response');
+      console.error('Full response:', JSON.stringify(data));
       return null;
     }
 
     const candidate = data.candidates[0];
+
+    // Log finish reason to diagnose safety filter issues
+    if (candidate.finishReason) {
+      console.log('Gemini finish reason:', candidate.finishReason);
+    }
+
     if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
       console.error('No content in Gemini candidate');
+      console.error('Candidate data:', JSON.stringify(candidate));
+      console.error('Full response:', JSON.stringify(data));
       return null;
     }
 
