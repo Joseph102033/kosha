@@ -22,30 +22,6 @@ export default function Home() {
               중대재해사례 OPS를 이메일로 받아보세요
             </p>
 
-            {/* Demo Video/GIF Section */}
-            <div className="mb-12 bg-white p-6 rounded-xl shadow-lg">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                🎬 빠른 데모 보기
-              </h2>
-              <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
-                {/* Placeholder for demo video/GIF - Replace with actual media */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">▶️</div>
-                    <p className="text-gray-600 font-medium">입력 → 미리보기 → 발행</p>
-                    <p className="text-sm text-gray-500 mt-2">(30~45초 데모 영상)</p>
-                  </div>
-                </div>
-                {/* Uncomment and use when actual video/GIF is available:
-                <video className="absolute inset-0 w-full h-full" controls>
-                  <source src="/demo-video.mp4" type="video/mp4" />
-                </video>
-                OR for GIF:
-                <img src="/demo.gif" alt="OPS 생성 데모" className="absolute inset-0 w-full h-full object-contain" />
-                */}
-              </div>
-            </div>
-
             {/* Subscription Form */}
             <div className="mb-16 bg-white p-8 rounded-xl shadow-lg">
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
@@ -131,27 +107,13 @@ export default function Home() {
                 OPS 작성 도구를 사용하여 10분 만에 전문적인 OPS 자료를 생성하세요
               </p>
 
-              <div className="space-y-3">
-                {/* Main CTA - With Access Key */}
+              <div className="text-center">
                 <Link
                   href="/builder"
-                  className="inline-block w-full sm:w-auto px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-center"
+                  className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl"
                 >
-                  🔑 액세스 키로 시작하기 →
+                  ✍️ OPS 직접 만들기 →
                 </Link>
-
-                {/* Demo Mode CTA */}
-                <div className="text-center">
-                  <Link
-                    href="/builder?mode=demo"
-                    className="inline-block w-full sm:w-auto px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition-colors border-2 border-blue-400"
-                  >
-                    🎯 체험 모드로 시작하기
-                  </Link>
-                  <p className="text-xs text-blue-200 mt-2">
-                    * 체험 모드: 저장 제한 및 워터마크 적용 / 액세스 키 불필요
-                  </p>
-                </div>
               </div>
             </div>
           </div>
