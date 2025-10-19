@@ -185,6 +185,24 @@ export default function PublicOPSPage() {
               {activeTab === 'summary' && (
                 <div>
                   <h2 className="text-xl font-semibold mb-4">사고 개요</h2>
+
+                  {/* Illustration */}
+                  {opsDocument.imageMeta && opsDocument.imageMeta.type === 'generated' && opsDocument.imageMeta.url && (
+                    <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                      <img
+                        src={opsDocument.imageMeta.url}
+                        alt="재해 상황 삽화"
+                        className="w-full h-auto"
+                      />
+                      <div className="p-3 bg-gray-50 border-t border-gray-200">
+                        <p className="text-xs text-gray-600 flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                          🤖 AI 생성 안전 교육 삽화 (Google Gemini 2.5 Flash)
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <p className="whitespace-pre-line text-gray-700">{opsDocument.summary}</p>
                 </div>
               )}

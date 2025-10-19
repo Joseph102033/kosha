@@ -207,12 +207,23 @@ export default function Preview({ state, data, error, activeTab, onTabChange }: 
                 )}
 
                 {data.imageMeta && data.imageMeta.type === 'placeholder' && (
-                  <div className="mb-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 p-8 text-center">
-                    <div className="text-6xl mb-2">🏗️</div>
-                    <p className="text-sm text-gray-600">
+                  <div className="mb-4 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 p-8 text-center">
+                    <div className="text-6xl mb-3 animate-pulse">🎨</div>
+                    <p className="text-base font-semibold text-gray-700 mb-2">
                       {state === 'generating'
-                        ? '삽화 생성 중... (AI 이미지 생성에는 시간이 걸릴 수 있습니다)'
-                        : '삽화는 실제 데이터 생성 시 표시됩니다'}
+                        ? 'AI 안전 교육 삽화 생성 중...'
+                        : '삽화는 AI 생성 후 표시됩니다'}
+                    </p>
+                    {state === 'generating' && (
+                      <div className="mt-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping" />
+                          <span>Google Gemini 2.5 Flash로 생성 중 (약 30초 소요)</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-3">
+                      💡 삽화는 KOSHA 안전 매뉴얼 스타일로 생성됩니다
                     </p>
                   </div>
                 )}
