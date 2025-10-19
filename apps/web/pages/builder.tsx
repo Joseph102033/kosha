@@ -4,6 +4,7 @@ import { fetchWithAuth, getAccessKey, setAccessKey } from '../lib/auth';
 import type { OPSFormData, OPSDocument } from '../lib/schemas/ops';
 import { isFormReadyForPreview, validateOPSDocument } from '../lib/schemas/ops';
 import { generateDummyOPS } from '../lib/dummy-ops';
+import { demoSamples } from '../lib/demo-samples';
 import Preview, { PreviewState } from '../components/Preview';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safe-ops-studio-workers.yosep102033.workers.dev';
@@ -138,6 +139,13 @@ export default function Builder() {
 
   const handleInputChange = (field: keyof OPSFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const loadDemoSample = (sampleId: string) => {
+    const sample = demoSamples.find(s => s.id === sampleId);
+    if (sample) {
+      setFormData(sample.formData);
+    }
   };
 
   const handlePublish = async () => {
@@ -406,6 +414,36 @@ export default function Builder() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Demo Samples Section */}
+          <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-2xl">💡</span>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  실제 사례로 빠르게 시작하기
+                </h3>
+                <p className="text-sm text-gray-600">
+                  아래 버튼을 클릭하면 실제 재해 사례 데이터가 자동으로 입력됩니다
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {demoSamples.map((sample) => (
+                <button
+                  key={sample.id}
+                  onClick={() => loadDemoSample(sample.id)}
+                  className="flex items-center gap-3 p-4 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all text-left group"
+                >
+                  <span className="text-3xl group-hover:scale-110 transition-transform">{sample.icon}</span>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-1">{sample.label}</h4>
+                    <p className="text-xs text-gray-600 line-clamp-2">{sample.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left: Input Form */}
             <div className="bg-white rounded-lg shadow-sm p-6">
