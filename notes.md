@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅
 - **Current Task**: Ready for next feature development
-- **Overall Progress**: 2/9 tasks completed + 5 major improvements + Gemini deployment (22% + enhancements)
+- **Overall Progress**: 2/9 tasks completed + 5 major improvements + Gemini full deployment (22% + enhancements)
 
 ---
 
@@ -520,6 +520,172 @@ Route (pages)                    Size  First Load JS
   "laws": [...]
 }
 ```
+
+---
+
+## ✅ 2025-10-19 Frontend Illustration Display (COMPLETED)
+
+### What Was Done:
+
+#### 1. Frontend Implementation ✅
+**목표**: Builder 및 Public OPS 페이지에 Gemini 생성 삽화 표시
+
+**변경 파일**:
+1. `apps/web/components/Preview.tsx` - 미리보기 컴포넌트 로딩 UX 개선
+2. `apps/web/pages/p/[slug].tsx` - Public OPS 페이지에 삽화 표시 추가
+
+#### 2. Preview Component 개선 ✅
+**파일**: `apps/web/components/Preview.tsx`
+
+**변경 내용**:
+- 삽화 placeholder 개선 (lines 209-228)
+- 생성 진행 상태 표시 추가
+- "Google Gemini 2.5 Flash로 생성 중 (약 30초 소요)" 메시지
+- Gradient background + animated pulse 효과
+- KOSHA 안전 매뉴얼 스타일 안내 추가
+
+**코드 하이라이트**:
+```typescript
+{data.imageMeta && data.imageMeta.type === 'placeholder' && (
+  <div className="mb-4 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 p-8 text-center">
+    <div className="text-6xl mb-3 animate-pulse">🎨</div>
+    <p className="text-base font-semibold text-gray-700 mb-2">
+      {state === 'generating'
+        ? 'AI 안전 교육 삽화 생성 중...'
+        : '삽화는 AI 생성 후 표시됩니다'}
+    </p>
+    {state === 'generating' && (
+      <div className="mt-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping" />
+          <span>Google Gemini 2.5 Flash로 생성 중 (약 30초 소요)</span>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+```
+
+#### 3. Public OPS Page 업데이트 ✅
+**파일**: `apps/web/pages/p/[slug].tsx`
+
+**변경 내용**:
+- Summary 탭에 삽화 표시 추가 (lines 190-204)
+- 생성된 이미지와 attribution footer
+- Responsive 이미지 레이아웃 (border + shadow)
+
+**코드 하이라이트**:
+```typescript
+{activeTab === 'summary' && (
+  <div>
+    <h2 className="text-xl font-semibold mb-4">사고 개요</h2>
+
+    {/* Illustration */}
+    {opsDocument.imageMeta && opsDocument.imageMeta.type === 'generated' && opsDocument.imageMeta.url && (
+      <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+        <img
+          src={opsDocument.imageMeta.url}
+          alt="재해 상황 삽화"
+          className="w-full h-auto"
+        />
+        <div className="p-3 bg-gray-50 border-t border-gray-200">
+          <p className="text-xs text-gray-600 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+            🤖 AI 생성 안전 교육 삽화 (Google Gemini 2.5 Flash)
+          </p>
+        </div>
+      </div>
+    )}
+
+    <p className="whitespace-pre-line text-gray-700">{opsDocument.summary}</p>
+  </div>
+)}
+```
+
+#### 4. 빌드 및 배포 ✅
+**빌드 결과**:
+```bash
+npm run build
+✓ Compiled successfully
+Route (pages)              Size     First Load JS
+├ ○ /                      2.78 kB        103 kB
+├ ○ /404                   2.28 kB         99 kB
+├ ○ /analytics (320 ms)    1.54 kB         99 kB
+├ ○ /builder (323 ms)      5.49 kB        102 kB
+└ ○ /p/[slug] (298 ms)     2.39 kB        102 kB  # 삽화 표시 추가
+```
+
+**Cloudflare Pages 배포**:
+```bash
+npx wrangler pages deploy out --project-name=kosha --commit-dirty=true
+
+✨ Success! Uploaded 13 files (19 already uploaded) (3.20 sec)
+✨ Uploading _redirects
+🌎 Deploying...
+✨ Deployment complete!
+🌎 URL: https://ab1f7c5e.kosha-8ad.pages.dev
+```
+
+#### 5. Git Commit ✅
+**커밋 정보**:
+- Commit: `fdbcb3d`
+- Message: "Add Gemini illustration display to frontend"
+- Files changed: 2 files, 34 insertions, 5 deletions
+
+**커밋 내용**:
+```
+Add Gemini illustration display to frontend
+
+Major improvements:
+1. Enhanced Preview component loading UX
+   - Added detailed progress indicator for AI generation
+   - Shows "Google Gemini 2.5 Flash로 생성 중 (약 30초 소요)"
+   - Improved placeholder with gradient background
+
+2. Added illustration display to public OPS page
+   - Shows generated illustration with KOSHA style
+   - Attribution footer: "🤖 AI 생성 안전 교육 삽화 (Google Gemini 2.5 Flash)"
+   - Responsive image layout with border and shadow
+
+Changes:
+- apps/web/components/Preview.tsx: Enhanced loading state with progress indicator
+- apps/web/pages/p/[slug].tsx: Added illustration display in summary tab
+
+Deployment:
+- Production: https://ab1f7c5e.kosha-8ad.pages.dev
+```
+
+### 완료된 기능 요약:
+
+**✅ Gemini 삽화 생성 Full Stack 구현 완료**:
+1. **Backend** (2025-10-19 오전):
+   - Google Gemini 2.5 Flash Image API 통합
+   - KOSHA 안전 매뉴얼 스타일 프롬프트 엔지니어링
+   - Cloudflare Workers 배포 + Secrets 설정
+   - Production: https://safe-ops-studio-workers.yosep102033.workers.dev
+
+2. **Frontend** (2025-10-19 오후):
+   - Builder 미리보기에 삽화 로딩/표시
+   - Public OPS 페이지에 삽화 표시
+   - 생성 진행 상태 UX 개선
+   - Production: https://ab1f7c5e.kosha-8ad.pages.dev
+
+**테스트 시나리오**:
+1. Builder에서 OPS 생성 → 실시간 미리보기에 placeholder 표시
+2. 약 30초 후 → Gemini가 생성한 삽화로 교체
+3. OPS 발행 → Public 페이지에서 삽화 확인
+4. 삽화 attribution: "🤖 AI 생성 안전 교육 삽화 (Google Gemini 2.5 Flash)"
+
+**기술 스택**:
+- **Image Generation**: Google Gemini 2.5 Flash (500 images/day free)
+- **API Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent`
+- **Response Format**: Base64-encoded PNG (data URL)
+- **Style**: KOSHA safety manual style (cartoon with outlines, flat colors)
+- **Generation Time**: ~30 seconds average
+
+**Production URLs**:
+- Backend API: https://safe-ops-studio-workers.yosep102033.workers.dev
+- Frontend: https://ab1f7c5e.kosha-8ad.pages.dev
 
 ---
 
