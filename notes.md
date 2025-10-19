@@ -588,4 +588,243 @@ vooster --help            # Available commands
 
 ---
 
+## ✅ 2025-10-19 Gemini 삽화 생성 구현 (COMPLETED)
+
+### What Was Done:
+
+#### 1. API 조사 및 선택 ✅
+**무료 API 비교 분석**:
+| API | 무료 한도 | 품질 | 통합 난이도 | 선택 |
+|-----|---------|------|-----------|------|
+| **Google Gemini 2.5 Flash Image** | 500/day | 최고 | 중간 | ✅ 선택됨 |
+| Cloudflare Workers AI (FLUX) | 2,083/day | 높음 | 쉬움 | 기존 구현 |
+| Together AI (FLUX Schnell) | 무제한 (3개월) | 높음 | 쉬움 | - |
+| Hugging Face | ~수백/hour | 중간 | 쉬움 | - |
+| Replicate | 50/month | 최고 | 쉬움 | - |
+
+**Gemini 선택 이유**:
+- 최신 모델 (2025년 8월 출시)
+- 하루 500개 이미지 무료 (월 15,000개)
+- 최고 품질 (state-of-the-art)
+- 신용카드 등록 불필요
+
+#### 2. 코드 구현 ✅
+**파일 수정**: `apps/workers/src/ops/illustration.ts`
+
+**변경 내용**:
+- Cloudflare Workers AI → Google Gemini API로 전환
+- API 엔드포인트: `gemini-2.0-flash-preview-image-generation`
+- Response modalities: `['TEXT', 'IMAGE']` (필수)
+- Temperature: 0.4 (일관된 안전 삽화)
+
+**핵심 코드**:
+```typescript
+const response = await fetch(
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': env.GEMINI_API_KEY,
+    },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseModalities: ['TEXT', 'IMAGE'],
+        temperature: 0.4,
+      },
+    }),
+  }
+);
+```
+
+#### 3. 환경 변수 설정 ✅
+**파일 생성**: `apps/workers/.dev.vars`
+```bash
+GEMINI_API_KEY=AIzaSyCR86W1Pes7SIIKhTQWEbB8YQ5_1jUIPtU
+```
+
+**파일 업데이트**: `.dev.vars.example`
+- GEMINI_API_KEY 템플릿 추가
+
+#### 4. 테스트 성공 ✅
+**로컬 테스트 결과**:
+```json
+{
+  "success": true,
+  "data": {
+    "imageMeta": {
+      "type": "generated",
+      "url": "data:image/png;base64,iVBORw0KG..."
+    }
+  }
+}
+```
+
+**성공 확인**:
+- ✅ Gemini API 호출 성공
+- ✅ Base64 PNG 이미지 생성
+- ✅ OPS 문서에 삽화 자동 포함
+- ✅ 응답 시간: ~28초 (허용 범위)
+
+### Technical Details:
+
+**API 응답 구조**:
+```json
+{
+  "candidates": [{
+    "content": {
+      "parts": [{
+        "inlineData": {
+          "mimeType": "image/png",
+          "data": "<base64_encoded_image>"
+        }
+      }]
+    }
+  }]
+}
+```
+
+**에러 해결 이력**:
+1. **문제**: `responseModalities: ['IMAGE']` → 400 Error
+   - **원인**: Gemini 2.0은 IMAGE만 단독 지원 안 함
+   - **해결**: `responseModalities: ['TEXT', 'IMAGE']`로 변경
+
+**이미지 저장 방식**:
+- 현재: Base64 data URL (프론트엔드에 직접 전달)
+- 향후: R2 Bucket에 저장 가능 (옵션)
+
+### Benefits:
+
+1. **비용**: 완전 무료 (하루 500개 한도)
+2. **품질**: 최신 Gemini 모델 (state-of-the-art)
+3. **유연성**: 텍스트 + 이미지 동시 생성 가능
+4. **확장성**: 필요시 Gemini Pro로 업그레이드 가능
+
+---
+
+## 🚀 Next Tasks (해커톤 개선 계획)
+
+### 계획 수립일: 2025-10-19
+### 업데이트: 2025-10-19 (삽화 생성 완료)
+
+#### ~~우선순위 1: 삽화 생성 기능 개선~~ ✅ COMPLETED
+(이동됨: 위 섹션 참조)
+
+---
+
+#### 우선순위 2: 법령 DB 확장 (Law Rules Database Expansion)
+**목표**: 50개 → 500개 법령 조항으로 확장하여 매핑 정확도 향상
+
+**현재 상태**:
+- 법령 개수: 50개 (추정)
+- 커버리지: ~10% (주요 사고 유형만)
+- 정확도: 낮음 (1~2개 법령만 매핑)
+
+**확장 계획**:
+| 단계 | 개수 | 커버리지 | 정확도 | 작업량 |
+|-----|------|---------|-------|-------|
+| 1단계 (현재) | 50개 | 10% | 낮음 | - |
+| 2단계 (목표) | 200개 | 40% | 중간 | 4~6시간 |
+| 3단계 (확장) | 500개 | 70% | 높음 | 12~16시간 |
+
+**2단계 법령 구성 (200개)**:
+1. **추락 사고** (50개)
+   - 산업안전보건법 제38조~제42조 (고소작업, 개구부 등)
+   - 시행령 제42조 (안전난간 설치 기준)
+   - 시행규칙 제54조~제60조 (안전대, 안전모 등)
+   - 건설안전기준 제11조~제20조
+
+2. **협착 사고** (30개)
+   - 산업안전보건법 제80조~제85조 (기계 안전)
+   - 시행규칙 제80조~제95조 (방호장치)
+
+3. **감전 사고** (40개)
+   - 산업안전보건법 제60조~65조 (전기 안전)
+   - 시행규칙 제300조~제330조 (전기 설비)
+
+4. **화재/폭발** (40개)
+   - 산업안전보건법 제90조~제95조
+   - 위험물안전관리법
+
+5. **중독/질식** (40개)
+   - 산업안전보건법 제120조~제130조
+   - 화학물질관리법
+
+**데이터 수집 방법**:
+1. **수동 입력** (초기 100개)
+   - 공단 홈페이지에서 주요 조항 복사
+   - `scripts/seed-laws.ts` 스크립트 작성
+   - SQL INSERT 문 생성
+
+2. **크롤링** (이후 100개)
+   - 국가법령정보센터 API 활용
+   - 키워드별 관련 법령 자동 매칭
+   - 중복 제거 및 검증
+
+**구현 계획**:
+1. **Seed 스크립트 작성** (`scripts/seed-laws.ts`)
+   ```typescript
+   const lawRules = [
+     { keyword: '추락', law_title: '산업안전보건법 제38조', url: '...' },
+     { keyword: '추락', law_title: '시행령 제42조', url: '...' },
+     // ... 200개
+   ];
+   ```
+
+2. **DB 마이그레이션 실행**
+   ```bash
+   wrangler d1 execute safe-ops-studio-db --file=scripts/seed-laws.sql
+   ```
+
+3. **매핑 로직 개선** (`apps/workers/src/ops/composer.ts`)
+   - 다중 키워드 매칭 (예: "3층 추락" → "추락" + "고소작업" + "3m 이상")
+   - 가중치 기반 정렬 (정확도 순)
+
+**예상 작업 시간**: 4~6시간 (200개 기준)
+
+---
+
+#### 통합 작업 계획 (추천)
+**Day 1 (3시간)**:
+1. Cloudflare Workers AI 설정 및 테스트 (30분)
+2. 삽화 생성 로직 개발 (1시간)
+3. R2 Bucket 생성 및 저장 로직 (30분)
+4. 프론트엔드 통합 및 테스트 (1시간)
+
+**Day 2 (6시간)**:
+1. 법령 데이터 수집 (100개) (3시간)
+2. Seed 스크립트 작성 및 실행 (1시간)
+3. 매핑 로직 개선 (1시간)
+4. 통합 테스트 및 검증 (1시간)
+
+**총 예상 시간**: 9시간
+
+---
+
+#### 다음 세션 시작 시 할 일
+```bash
+# 1. 현재 진행 상황 확인
+cat notes.md
+
+# 2. 삽화 생성 기능부터 시작
+cd apps/workers
+# Cloudflare Workers AI 바인딩 확인
+cat wrangler.toml
+
+# 3. 또는 법령 DB 확장부터 시작
+cd scripts
+# Seed 스크립트 작성
+touch seed-laws.ts
+```
+
+---
+
+#### 참고 자료
+- Cloudflare Workers AI 문서: https://developers.cloudflare.com/workers-ai/
+- Stable Diffusion 프롬프트 가이드: https://stable-diffusion-art.com/prompt-guide/
+- 국가법령정보센터 API: https://www.law.go.kr/
+
+---
+
 **Note**: This file is referenced in `CLAUDE.md`. Always update this file when completing tasks or encountering issues.

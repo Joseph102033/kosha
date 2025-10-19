@@ -179,78 +179,84 @@ function generateImagePromptFallback(input: OPSInput): string {
 }
 
 /**
- * Generate illustration using Cloudflare Workers AI
- * Returns base64-encoded image or null if generation fails
+ * Generate illustration using Google Gemini 2.5 Flash Image API
+ * Returns base64-encoded image (data URL) or null if generation fails
+ * Free tier: 500 images/day via Google AI Studio
  */
 export async function generateIllustration(
   input: OPSInput,
   env: Env
 ): Promise<string | null> {
   try {
-    const prompt = await generateImagePrompt(input, env);
+    // Check if Gemini API key is configured
+    if (!env.GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY not configured');
+      return null;
+    }
 
-    // Use Cloudflare Workers AI to generate image
-    // Model: @cf/black-forest-labs/flux-1-schnell (fast, high quality)
-    const response = await env.AI.run(
-      '@cf/black-forest-labs/flux-1-schnell',
+    const prompt = await generateImagePrompt(input, env);
+    console.log('🎨 Generating illustration with Gemini 2.5 Flash Image...');
+
+    // Call Google Gemini 2.5 Flash Image API
+    // Model: gemini-2.0-flash-preview-image-generation
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent',
       {
-        prompt: prompt,
-        num_steps: 8, // Maximum steps for best quality (takes longer but more accurate)
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': env.GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'], // MUST include TEXT with IMAGE for Gemini
+            temperature: 0.4, // Lower temperature for consistent safety illustrations
+          },
+        }),
       }
     );
 
-    // Handle different response types
-    // Workers AI can return ReadableStream, ArrayBuffer, or object with image property
-    if (response instanceof ReadableStream) {
-      const reader = response.getReader();
-      const chunks: Uint8Array[] = [];
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Gemini API error:', response.status, errorText);
+      return null;
+    }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-      }
+    const result = await response.json();
 
-      // Combine chunks
-      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      const combined = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        combined.set(chunk, offset);
-        offset += chunk.length;
-      }
+    // Extract image data from Gemini response
+    // Response structure: { candidates: [{ content: { parts: [{ inlineData: { mimeType, data } }] } }] }
+    if (result.candidates && result.candidates.length > 0) {
+      const candidate = result.candidates[0];
 
-      // Convert to base64
-      const base64 = btoa(String.fromCharCode(...combined));
-      return `data:image/png;base64,${base64}`;
-    } else if (response instanceof ArrayBuffer) {
-      const bytes = new Uint8Array(response);
-      const base64 = btoa(String.fromCharCode(...bytes));
-      return `data:image/png;base64,${base64}`;
-    } else if (typeof response === 'object' && response !== null) {
-      // Check if response has image data
-      const anyResponse = response as any;
-      if (anyResponse.image && anyResponse.image instanceof ArrayBuffer) {
-        const bytes = new Uint8Array(anyResponse.image);
-        const base64 = btoa(String.fromCharCode(...bytes));
-        return `data:image/png;base64,${base64}`;
-      } else if (typeof anyResponse.image === 'string') {
-        // Already base64 or data URL
-        if (anyResponse.image.startsWith('data:')) {
-          return anyResponse.image;
-        } else {
-          return `data:image/png;base64,${anyResponse.image}`;
-        }
-      } else if (anyResponse.data && anyResponse.data instanceof ArrayBuffer) {
-        const bytes = new Uint8Array(anyResponse.data);
-        const base64 = btoa(String.fromCharCode(...bytes));
-        return `data:image/png;base64,${base64}`;
+      // Find image part in response
+      const imagePart = candidate.content?.parts?.find(
+        (part: any) => part.inlineData?.mimeType?.startsWith('image/')
+      );
+
+      if (imagePart?.inlineData?.data) {
+        const mimeType = imagePart.inlineData.mimeType || 'image/png';
+        const base64Data = imagePart.inlineData.data;
+
+        console.log('✅ Illustration generated successfully');
+        return `data:${mimeType};base64,${base64Data}`;
       }
     }
 
+    console.error('❌ No image found in Gemini response');
     return null;
   } catch (error) {
-    console.error('Illustration generation error:', error);
+    console.error('❌ Illustration generation error:', error);
     return null;
   }
 }
