@@ -350,14 +350,14 @@ export default function Builder() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">OPS 작성 도구</h1>
-                <p className="text-sm text-gray-600 mt-1">재해 정보를 입력하여 OPS 자료를 자동 생성합니다</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">OPS 작성 도구</h1>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">재해 정보를 입력하여 OPS 자료를 자동 생성합니다</p>
               </div>
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap self-end sm:self-auto"
               >
                 {hasAccessKey ? '🔑 키 변경' : '🔑 액세스 키 입력'}
               </button>
@@ -415,28 +415,28 @@ export default function Builder() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Demo Samples Section */}
-          <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <span className="text-2xl">💡</span>
+          <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+            <div className="flex items-start gap-2 sm:gap-3 mb-4">
+              <span className="text-xl sm:text-2xl">💡</span>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
                   실제 사례로 빠르게 시작하기
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   아래 버튼을 클릭하면 실제 재해 사례 데이터가 자동으로 입력됩니다
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
               {demoSamples.map((sample) => (
                 <button
                   key={sample.id}
                   onClick={() => loadDemoSample(sample.id)}
-                  className="flex items-center gap-3 p-4 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all text-left group"
+                  className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 active:bg-gray-100 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all text-left group"
                 >
-                  <span className="text-3xl group-hover:scale-110 transition-transform">{sample.icon}</span>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-1">{sample.label}</h4>
+                  <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform flex-shrink-0">{sample.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-1">{sample.label}</h4>
                     <p className="text-xs text-gray-600 line-clamp-2">{sample.description}</p>
                   </div>
                 </button>
@@ -444,15 +444,15 @@ export default function Builder() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Left: Input Form */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">재해 정보 입력</h2>
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">재해 정보 입력</h2>
 
               <form className="space-y-4">
                 {/* Title */}
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1.5">
                     OPS 제목 <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -461,7 +461,7 @@ export default function Builder() {
                     value={formData.title || ''}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="예: 비계 추락사고 - 2025년 1월"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -476,7 +476,7 @@ export default function Builder() {
                     id="incidentDate"
                     value={formData.incidentDate || ''}
                     onChange={(e) => handleInputChange('incidentDate', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -492,7 +492,7 @@ export default function Builder() {
                     value={formData.location || ''}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     placeholder="예: 서울 건설현장 A동"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -508,7 +508,7 @@ export default function Builder() {
                     value={formData.agentObject || ''}
                     onChange={(e) => handleInputChange('agentObject', e.target.value)}
                     placeholder="예: 작업자, 기계 조작자"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -523,7 +523,7 @@ export default function Builder() {
                     value={formData.hazardObject || ''}
                     onChange={(e) => handleInputChange('hazardObject', e.target.value)}
                     placeholder="예: 비계, 화학물질 용기"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -536,7 +536,7 @@ export default function Builder() {
                     id="incidentType"
                     value={formData.incidentType || ''}
                     onChange={(e) => handleInputChange('incidentType', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="">재해 유형 선택</option>
@@ -560,7 +560,7 @@ export default function Builder() {
                     onChange={(e) => handleInputChange('incidentCause', e.target.value)}
                     placeholder="재해의 주요 원인을 상세히 기술해 주세요..."
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -578,7 +578,7 @@ export default function Builder() {
                     type="button"
                     onClick={handlePublish}
                     disabled={isPublishing || !preview || !formData.title?.trim()}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors"
+                    className="w-full px-6 py-3.5 text-base sm:text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold transition-colors shadow-md hover:shadow-lg"
                   >
                     {isPublishing ? '📤 발행 중...' : '📤 OPS 문서 발행'}
                   </button>
@@ -602,10 +602,10 @@ export default function Builder() {
 
         {/* Auth Modal */}
         {showAuthModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">🔑 액세스 키 필요</h3>
-              <p className="text-gray-600 mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 max-w-md w-full">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">🔑 액세스 키 필요</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                 OPS 문서를 생성하고 발행하려면 관리자 액세스 키가 필요합니다.
               </p>
               <input
@@ -614,14 +614,14 @@ export default function Builder() {
                 onChange={(e) => setAccessKeyInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveAccessKey()}
                 placeholder="액세스 키를 입력하세요"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
                 autoFocus
               />
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={handleSaveAccessKey}
                   disabled={!accessKeyInput.trim()}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-base"
                 >
                   저장
                 </button>
@@ -630,7 +630,7 @@ export default function Builder() {
                     setShowAuthModal(false);
                     setAccessKeyInput('');
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 active:bg-gray-400 transition-colors font-medium text-base"
                 >
                   취소
                 </button>
@@ -644,20 +644,20 @@ export default function Builder() {
 
         {/* Success Modal */}
         {publishedUrl && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">✅ OPS 문서 발행 완료!</h3>
-              <p className="text-gray-600 mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">✅ OPS 문서 발행 완료!</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                 OPS 문서가 성공적으로 발행되었습니다. 아래 공개 URL로 접근할 수 있습니다.
               </p>
-              <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-2">공개 URL:</p>
-                <p className="text-blue-600 break-all">{window.location.origin}{publishedUrl}</p>
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+                <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">공개 URL:</p>
+                <p className="text-sm sm:text-base text-blue-600 break-all">{window.location.origin}{publishedUrl}</p>
               </div>
-              <div className="flex gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3">
                 <button
                   onClick={copyPublicUrl}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium text-base"
                 >
                   📋 링크 복사
                 </button>
@@ -665,7 +665,7 @@ export default function Builder() {
                   href={publishedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
+                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 active:bg-gray-400 transition-colors font-medium text-center text-base"
                 >
                   👁️ 페이지 보기
                 </a>
@@ -675,7 +675,7 @@ export default function Builder() {
               {hasAccessKey && (
                 <button
                   onClick={() => setShowEmailModal(true)}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium mb-3"
+                  className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors font-medium mb-3 text-base"
                 >
                   📧 이메일로 공유 (관리자 전용)
                 </button>
@@ -686,7 +686,7 @@ export default function Builder() {
                   setPublishedUrl(null);
                   setPublishedOpsId(null);
                 }}
-                className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+                className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm sm:text-base"
               >
                 닫기
               </button>
