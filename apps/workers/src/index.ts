@@ -22,6 +22,7 @@ import { saveLawFeedback, getLawFeedback } from './law/feedback';
 import { generateDocumentHash } from './utils/hash';
 import { handleSend } from './delivery/send';
 import { requireAuth } from './auth/middleware';
+import { getAnalytics } from './analytics/stats';
 
 export interface Env {
   // D1 Database binding
@@ -194,6 +195,29 @@ export default {
           status: response.status,
           headers,
         });
+      }
+
+      // Analytics endpoint (public - read-only)
+      if (path === '/api/analytics' && request.method === 'GET') {
+        try {
+          const analytics = await getAnalytics(env);
+          return new Response(JSON.stringify({
+            success: true,
+            data: analytics,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Analytics error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get analytics',
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
       }
 
       // Law search endpoint (public - read-only)

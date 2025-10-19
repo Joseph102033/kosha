@@ -146,6 +146,11 @@ export default function Home() {
             {/* Copyright */}
             <div className="text-center text-gray-600 text-sm">
               <p>&copy; {new Date().getFullYear()} Safe OPS Studio. All rights reserved.</p>
+              <div className="mt-2">
+                <Link href="/analytics" className="text-blue-600 hover:underline text-sm">
+                  📊 통계 대시보드
+                </Link>
+              </div>
             </div>
           </div>
         </footer>
