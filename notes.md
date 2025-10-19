@@ -1,6 +1,6 @@
 # Safe OPS Studio - Development Notes
 
-**Last Updated**: 2025-10-11
+**Last Updated**: 2025-10-19
 **Vooster Project UID**: UNMR
 **Current Phase**: Week 1 - M1 (MVP Implementation)
 
@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅
 - **Current Task**: Ready for next feature development
-- **Overall Progress**: 2/9 tasks completed + 4 major improvements + deployment (22% + enhancements)
+- **Overall Progress**: 2/9 tasks completed + 5 major improvements + Gemini deployment (22% + enhancements)
 
 ---
 
@@ -824,6 +824,94 @@ touch seed-laws.ts
 - Cloudflare Workers AI 문서: https://developers.cloudflare.com/workers-ai/
 - Stable Diffusion 프롬프트 가이드: https://stable-diffusion-art.com/prompt-guide/
 - 국가법령정보센터 API: https://www.law.go.kr/
+
+---
+
+## ✅ 2025-10-19 Gemini 삽화 생성 배포 완료 (PRODUCTION DEPLOYED)
+
+### 배포 완료 사항
+
+**Google Gemini 2.5 Flash Image API 통합 및 프로덕션 배포 성공**
+
+#### 1. 기술 스택 변경
+- ❌ 기존: Cloudflare Workers AI (`@cf/black-forest-labs/flux-1-schnell`)
+- ✅ 신규: **Google Gemini 2.5 Flash Image API**
+  - Model: `gemini-2.0-flash-preview-image-generation`
+  - Free Tier: 500 images/day
+  - API Endpoint: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent`
+
+#### 2. 구현 완료 파일
+- `apps/workers/src/ops/illustration.ts` - 완전히 재작성
+- `apps/workers/.dev.vars` - GEMINI_API_KEY 추가
+- `apps/workers/.dev.vars.example` - 템플릿 업데이트
+
+#### 3. 배포 완료 내역
+```bash
+# Wrangler Secrets 설정
+echo "AIzaSyCR86W1Pes7SIIKhTQWEbB8YQ5_1jUIPtU" | npx wrangler secret put GEMINI_API_KEY
+# ✅ Success! Uploaded secret GEMINI_API_KEY
+
+# Workers 배포
+npx wrangler deploy
+# ✅ Deployed to: https://safe-ops-studio-workers.yosep102033.workers.dev
+# Version ID: 7e305f1d-1445-42cc-928f-020f89454bee
+```
+
+#### 4. 프로덕션 테스트 성공
+```bash
+curl -X POST https://safe-ops-studio-workers.yosep102033.workers.dev/api/ops/generate \
+  -H "Content-Type: application/json" \
+  -d '{"incidentDate":"2025-01-15T10:00:00","location":"서울 건설 현장","incidentType":"추락","incidentCause":"3층 높이에서 안전벨트 미착용으로 추락"}'
+
+# ✅ Response: {"success":true,"data":{..., "imageMeta":{"type":"generated","url":"data:image/png;base64,..."}}}
+```
+
+#### 5. 주요 이슈 해결
+**문제**: `GEMINI_API_KEY not configured` 에러 (Secret 추가 후에도 발생)
+**원인**: `wrangler secret put` 대화형 입력에서 값이 제대로 전달 안됨
+**해결**: `echo "API_KEY" | wrangler secret put GEMINI_API_KEY` 방식으로 재설정
+
+#### 6. API 요청 구조
+```typescript
+{
+  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  generationConfig: {
+    responseModalities: ['TEXT', 'IMAGE'], // ⚠️ 필수: TEXT 포함
+    temperature: 0.4
+  }
+}
+```
+
+#### 7. 응답 구조
+```typescript
+{
+  candidates: [{
+    content: {
+      parts: [{
+        inlineData: {
+          mimeType: 'image/png',
+          data: '<base64-encoded-image>'
+        }
+      }]
+    }
+  }]
+}
+```
+
+#### 8. 프로덕션 URL
+- **Workers API**: https://safe-ops-studio-workers.yosep102033.workers.dev
+- **OPS 생성**: `POST /api/ops/generate`
+- **건강 체크**: `GET /health`
+
+#### 9. 사용량 모니터링
+- **무료 한도**: 500 images/day (Google AI Studio)
+- **현재 사용**: 프로덕션 테스트 2회
+- **모니터링**: Google AI Studio Console
+
+#### 10. 다음 단계
+- ✅ 프로덕션 배포 완료
+- ⏭️ 프론트엔드에서 삽화 표시 기능 구현
+- ⏭️ 법령 DB 확장 (산업안전보건법, 산업안전보건기준에 관한 규칙)
 
 ---
 

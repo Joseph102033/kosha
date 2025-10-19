@@ -49,7 +49,11 @@
       "Bash(git commit:*)",
       "Bash(npx wrangler:*)",
       "WebFetch(domain:developers.cloudflare.com)",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "mcp__cloudflare-docs__search_cloudflare_documentation",
+      "WebSearch",
+      "Bash(test -f apps/workers/.dev.vars)",
+      "WebFetch(domain:www.law.go.kr)"
     ],
     "deny": [],
     "ask": []
