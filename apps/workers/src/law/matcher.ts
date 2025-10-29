@@ -166,23 +166,23 @@ export async function matchLaws(
     if (type.includes('fall') || type.includes('추락') || hazard.includes('scaffold') || hazard.includes('height')) {
       laws.push({
         title: '산업안전보건법 제38조 (추락 등의 위험 방지)',
-        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=231390',
+        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법',
       });
     } else if (type.includes('chemical') || type.includes('화학') || type.includes('toxic') || type.includes('spill')) {
       laws.push({
         title: '산업안전보건법 제39조 (물질안전보건자료의 작성·제출)',
-        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=231390',
+        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법',
       });
     } else if (type.includes('fire') || type.includes('화재') || type.includes('explosion') || type.includes('폭발')) {
       laws.push({
         title: '산업안전보건법 제36조 (폭발·화재 등의 위험 방지)',
-        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=231390',
+        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법',
       });
     } else {
       // Generic fallback
       laws.push({
         title: '산업안전보건법 제38조 (안전조치)',
-        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=231390',
+        url: 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법',
       });
     }
   }

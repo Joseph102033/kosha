@@ -1318,4 +1318,67 @@ curl -X POST .../api/ops/generate \
 
 ---
 
+## ✅ 2025-10-29 Law Reference URL Fix (COMPLETED)
+
+### What Was Done:
+
+#### 문제
+- 모든 법령 링크 클릭 시 "해당 법령이 존재하지 않습니다" 오류 발생
+- DB와 코드에 하드코딩된 URL들이 모두 잘못된 `lsiSeq` 파라미터 사용
+
+#### 해결책
+
+**1. 안정적인 URL 형식 도입**:
+- 기존: `https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=231390` (❌ 존재하지 않음)
+- 신규: `https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법` (✅ 작동)
+
+**2. 법령별 URL 업데이트**:
+- 산업안전보건법: `lsId=001766`
+- 산업안전보건기준에 관한 규칙: `lsId=007363`
+- 화학물질관리법: `lsId=011436`
+
+**3. 코드 수정**:
+`apps/workers/src/law/matcher.ts` (line 166-188)
+- Fallback URL 업데이트 (4개 조건)
+
+**4. DB 대량 업데이트**:
+```sql
+-- 산업안전보건법 (22개 레코드)
+UPDATE law_rules SET url = 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=001766#산업안전보건법'
+WHERE law_title LIKE '%산업안전보건법%' AND law_title NOT LIKE '%기준%';
+
+-- 산업안전보건기준에 관한 규칙 (1,112개 레코드)
+UPDATE law_rules SET url = 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=007363#산업안전보건기준에관한규칙'
+WHERE law_title LIKE '%산업안전보건기준%';
+
+-- 화학물질관리법 (2개 레코드)
+UPDATE law_rules SET url = 'https://www.law.go.kr/LSW/lsInfoP.do?lsId=011436#화학물질관리법'
+WHERE law_title LIKE '%화학물질관리법%';
+
+-- 총 1,136개 레코드 업데이트
+```
+
+#### 배포 정보
+- Version ID: `c5365956-8ce2-49a8-b05a-b0e3fb9a0428`
+- URL: https://safe-ops-studio-workers.yosep102033.workers.dev
+
+#### 테스트 결과
+- ✅ 산업안전보건법 URL 작동 확인
+- ✅ 법령 본문 페이지 정상 표시
+- ✅ "해당 법령이 존재하지 않습니다" 오류 해결
+
+### Technical Details:
+
+**URL 설계 원칙**:
+- 법령 ID (`lsId`) 사용으로 안정적인 링크 보장
+- 앵커 해시 (`#법령명`)로 사용자 경험 개선
+- 조문별 직접 링크 불가능 → 전체 법령 페이지로 링크
+
+**참고**:
+- 법제처 URL은 조문별 직접 링크를 안정적으로 지원하지 않음
+- 법령 전체 페이지로 링크하면 사용자가 조문을 검색 가능
+- 향후 법제처 Open API 연동 시 개선 가능
+
+---
+
 **Note**: This file is referenced in `CLAUDE.md`. Always update this file when completing tasks or encountering issues.
