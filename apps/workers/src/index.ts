@@ -23,6 +23,7 @@ import { generateDocumentHash } from './utils/hash';
 import { handleSend } from './delivery/send';
 import { requireAuth } from './auth/middleware';
 import { getAnalytics } from './analytics/stats';
+import { searchLaws as searchMOJLaws, searchOccupationalSafetyLaws } from './law/mojLawApi';
 
 export interface Env {
   // D1 Database binding
@@ -105,9 +106,9 @@ export default {
         });
       }
 
-      // OPS save endpoint (protected)
+      // OPS save endpoint (public - anyone can save their OPS)
       if (path === '/api/ops/save') {
-        const response = await requireAuth(request, env, handleSaveOPS);
+        const response = await handleSaveOPS(request, env);
         const headers = new Headers(response.headers);
         Object.entries(corsHeaders).forEach(([key, value]) => {
           headers.set(key, value);
@@ -213,6 +214,64 @@ export default {
           return new Response(JSON.stringify({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to get analytics',
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // TEST: 법제처 API 테스트 엔드포인트 (public - for testing)
+      if (path === '/api/test/moj-law-api' && request.method === 'GET') {
+        try {
+          const query = url.searchParams.get('query') || '산업안전보건법';
+
+          console.log('[TEST] Testing MOJ Law API with query:', query);
+
+          const result = await searchMOJLaws(query, { display: 5, page: 1 });
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: '법제처 API 연결 성공!',
+            data: result,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('[TEST] MOJ Law API error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to test MOJ Law API',
+            stack: error instanceof Error ? error.stack : undefined,
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // TEST: 산업안전보건 법령 검색 테스트 (public - for testing)
+      if (path === '/api/test/safety-laws' && request.method === 'GET') {
+        try {
+          console.log('[TEST] Searching occupational safety laws...');
+
+          const laws = await searchOccupationalSafetyLaws();
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: `${laws.length}개의 산업안전보건 관련 법령을 찾았습니다`,
+            data: laws,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('[TEST] Safety laws search error:', error);
+          return new Response(JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to search safety laws',
+            stack: error instanceof Error ? error.stack : undefined,
           }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },

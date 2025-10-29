@@ -27,23 +27,25 @@ ${hazardObject ? `- 위험물: ${hazardObject}` : ''}
 
 **키워드 추출 요구사항:**
 
-1. 다음 카테고리의 키워드를 추출하세요:
-   - 재해 유형 키워드 (예: fall, chemical, fire, explosion, equipment)
-   - 작업 환경 키워드 (예: scaffold, height, confined_space, machinery)
-   - 위험 요소 키워드 (예: electricity, toxic, hot_work, lifting)
-   - 안전 장비 키워드 (예: harness, ppe, guard, ventilation)
+1. 다음 카테고리의 **한글 키워드**를 추출하세요:
+   - 재해 유형 키워드 (예: 추락, 협착, 감전, 화재, 전도, 낙하물)
+   - 작업 환경 키워드 (예: 작업장, 기계, 보호구, 비상구, 조명, 환기)
+   - 위험 요소 키워드 (예: 화학물질, 분진, 고열, 소음, 밀폐공간)
 
-2. 영문 키워드로 추출 (한글 키워드는 영문으로 변환)
-   - 추락 → fall
-   - 화학물질 → chemical
-   - 비계 → scaffold
-   - 안전벨트 → harness
+2. **반드시 한글 키워드만 사용** (영문 사용 금지)
+   - ✅ 좋은 예: "추락", "안전난간", "개구부", "안전대"
+   - ❌ 나쁜 예: "fall", "scaffold", "harness"
 
 3. 일반적이고 검색 가능한 키워드 사용 (너무 구체적이면 매칭 실패)
-   - 좋은 예: "fall", "height", "scaffold"
-   - 나쁜 예: "worker_fell_from_third_floor"
+   - ✅ 좋은 예: "추락", "작업장", "기계"
+   - ❌ 나쁜 예: "3층에서 추락"
 
 4. 3-7개 키워드 추출
+
+**사용 가능한 키워드 목록:**
+- 재해 유형: 추락, 협착, 감전, 화재, 전도, 낙하물
+- 작업장: 작업장, 기계, 보호구, 비상구, 조명, 환기
+- 위험 요소: 화학물질, 분진, 고열, 소음, 밀폐공간
 
 **출력 형식 (JSON):**
 \`\`\`json
@@ -54,7 +56,7 @@ ${hazardObject ? `- 위험물: ${hazardObject}` : ''}
 
   const response = await callGemini(prompt, env, {
     temperature: 0.3, // Low temperature for consistent keyword extraction
-    maxOutputTokens: 512,
+    maxOutputTokens: 4096, // Increased to handle thinking tokens (Gemini 2.5 Flash uses up to 2047 thinking tokens)
   });
 
   if (!response) {
@@ -85,22 +87,28 @@ function extractKeywordsFallback(
   const agent = agentObject?.toLowerCase() || '';
   const hazard = hazardObject?.toLowerCase() || '';
 
-  // Extract keywords from incident type
-  if (type.includes('fall') || type.includes('추락')) keywords.push('fall');
-  if (type.includes('chemical') || type.includes('화학')) keywords.push('chemical');
-  if (type.includes('fire') || type.includes('화재')) keywords.push('fire');
-  if (type.includes('explosion') || type.includes('폭발')) keywords.push('explosion');
-  if (type.includes('spill') || type.includes('누출')) keywords.push('spill');
-  if (type.includes('equipment') || type.includes('장비')) keywords.push('equipment');
+  // Extract keywords from incident type (한글 키워드)
+  if (type.includes('fall') || type.includes('추락')) keywords.push('추락');
+  if (type.includes('chemical') || type.includes('화학')) keywords.push('화학물질');
+  if (type.includes('fire') || type.includes('화재')) keywords.push('화재');
+  if (type.includes('explosion') || type.includes('폭발')) keywords.push('화재'); // 화재와 폭발은 같은 카테고리
+  if (type.includes('협착') || type.includes('caught')) keywords.push('협착');
+  if (type.includes('감전') || type.includes('electric')) keywords.push('감전');
+  if (type.includes('전도') || type.includes('slip')) keywords.push('전도');
+  if (type.includes('낙하') || type.includes('falling')) keywords.push('낙하물');
 
   // Extract keywords from hazard object
-  if (hazard.includes('scaffold') || hazard.includes('비계')) keywords.push('scaffold');
-  if (hazard.includes('height') || hazard.includes('높이')) keywords.push('height');
-  if (hazard.includes('opening') || hazard.includes('개구부')) keywords.push('opening');
-  if (hazard.includes('machine') || hazard.includes('기계')) keywords.push('machinery');
-  if (hazard.includes('electric') || hazard.includes('전기')) keywords.push('electricity');
+  if (hazard.includes('scaffold') || hazard.includes('비계')) keywords.push('추락', '작업장');
+  if (hazard.includes('height') || hazard.includes('높이')) keywords.push('추락');
+  if (hazard.includes('opening') || hazard.includes('개구부')) keywords.push('추락');
+  if (hazard.includes('machine') || hazard.includes('기계')) keywords.push('기계', '협착');
+  if (hazard.includes('electric') || hazard.includes('전기')) keywords.push('감전');
+  if (hazard.includes('화학') || hazard.includes('chemical')) keywords.push('화학물질');
+  if (hazard.includes('안전대') || hazard.includes('harness')) keywords.push('보호구', '추락');
+  if (hazard.includes('밀폐') || hazard.includes('confined')) keywords.push('밀폐공간');
 
-  return keywords;
+  // Remove duplicates
+  return [...new Set(keywords)];
 }
 
 /**
@@ -184,5 +192,7 @@ export async function matchLaws(
     index === self.findIndex(l => l.title === law.title)
   );
 
-  return unique;
+  // Limit to 10 laws to comply with Gemini API validation
+  // (Gemini expects laws array to have <=10 items for image generation)
+  return unique.slice(0, 10);
 }

@@ -1081,4 +1081,241 @@ curl -X POST https://safe-ops-studio-workers.yosep102033.workers.dev/api/ops/gen
 
 ---
 
+## ✅ 2025-10-27 법제처 Open API 연결 작업 (IN PROGRESS)
+
+### What Was Done:
+
+#### 1. 법제처 Open API 승인 완료 ✅
+**승인 정보**:
+- 이메일 ID: `yosep102033` (yosep102033@gmail.com)
+- 도메인: `safe-ops-studio-workers.yosep102033.workers.dev`
+- 승인 상태: **승인 완료** (2025-10-27)
+- API 종류: 대한민국 현행법령 목록/본문 (HTML, XML, JSON)
+
+#### 2. Workers 법령 검색 모듈 구현 ✅
+**파일 생성**: `apps/workers/src/law/mojLawApi.ts`
+
+**주요 기능**:
+- `searchLaws()`: 법령 검색 (법령명 기반)
+- `getLawContent()`: 법령 본문 조회 (법령 ID 기반)
+- `searchOccupationalSafetyLaws()`: 산업안전보건 관련 법령 검색
+
+**API 설정**:
+- Base URL: `http://www.law.go.kr` (HTTP, not HTTPS)
+- 엔드포인트: `/DRF/lawSearch.do?target=law`
+- 인증: OC 파라미터 (도메인 기반 인증)
+- 응답 형식: JSON, XML, HTML
+
+**요청 헤더**:
+```typescript
+headers: {
+  'Accept': 'application/json',
+  'Referer': 'https://safe-ops-studio-workers.yosep102033.workers.dev',
+  'Origin': 'https://safe-ops-studio-workers.yosep102033.workers.dev',
+}
+```
+
+#### 3. 테스트 엔드포인트 추가 ✅
+**Workers 라우터 업데이트**: `apps/workers/src/index.ts`
+
+**새로운 엔드포인트**:
+- `GET /api/test/moj-law-api?query={법령명}` - 법제처 API 직접 테스트
+- `GET /api/test/safety-laws` - 산업안전보건 법령 검색 테스트
+
+#### 4. Workers 배포 완료 ✅
+**배포 정보**:
+- Version ID: `5f932982-8af6-4a24-84f2-eba447f9795f`
+- URL: https://safe-ops-studio-workers.yosep102033.workers.dev
+- Upload Size: 132.57 KiB / gzip: 29.16 KiB
+
+### ⚠️ 현재 이슈: 530 에러
+
+**문제**:
+법제처 API 호출 시 HTTP 530 에러 발생
+```json
+{
+  "success": false,
+  "error": "법제처 API 호출 실패: 530"
+}
+```
+
+**시도한 해결책**:
+1. ✅ HTTP/HTTPS 프로토콜 수정 (https → http)
+2. ✅ Referer/Origin 헤더 추가
+3. ✅ 도메인 주소 정확성 확인
+
+**가장 가능성 높은 원인**:
+- **승인 반영 시간** - 오늘(2025-10-27) 승인 완료
+- 일반적으로 공공 API는 **1-24시간** 반영 시간 필요
+- 내일(2025-10-28) 재테스트 예정 ⏳
+
+**대안**:
+- 법제처 공동활용 유지보수팀 문의: **02-2109-6446**
+- 확인 사항:
+  - 도메인 등록 시 http/www 포함 여부
+  - Cloudflare Workers (*.workers.dev) 지원 여부
+  - 승인 후 반영 소요 시간
+
+### 📝 다음 세션 시작 시 할 일 (2025-10-28)
+
+#### 1️⃣ 법제처 API 재테스트 (최우선)
+```bash
+# Workers에서 직접 테스트
+curl "https://safe-ops-studio-workers.yosep102033.workers.dev/api/test/moj-law-api?query=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84%EB%B3%B4%EA%B1%B4%EB%B2%95"
+
+# 성공하면 다음 단계로:
+curl "https://safe-ops-studio-workers.yosep102033.workers.dev/api/test/safety-laws"
+```
+
+**예상 결과 (성공 시)**:
+```json
+{
+  "success": true,
+  "message": "법제처 API 연결 성공!",
+  "data": {
+    "target": "law",
+    "totalCnt": 5,
+    "법령": [
+      {
+        "법령ID": "...",
+        "법령명한글": "산업안전보건법",
+        "시행일자": "...",
+        "소관부처명": "고용노동부"
+      }
+    ]
+  }
+}
+```
+
+#### 2️⃣ API 연결 실패 시 (Plan B)
+- 법제처에 전화 문의 (02-2109-6446)
+- 기존 법령 규칙 DB 사용 (50개)
+- 법령 매칭 로직 개선으로 정확도 향상
+
+#### 3️⃣ API 연결 성공 시
+- 법령 DB 자동 저장 기능 구현
+- 키워드 기반 매칭 로직 개선
+- 산업안전보건법 관련 500개 법령 수집
+
+### Technical Details:
+
+**법제처 API 엔드포인트 구조**:
+```
+http://www.law.go.kr/DRF/lawSearch.do?
+  OC=yosep102033&
+  target=law&
+  type=JSON&
+  query={법령명}&
+  display=20&
+  page=1
+```
+
+**응답 필드**:
+- 법령ID: 고유 식별자
+- 법령명한글: 법령명
+- 법령약칭명: 약칭
+- 공포일자: 공포일
+- 시행일자: 시행일
+- 소관부처명: 담당 부처
+
+**코드 위치**:
+- API 클라이언트: `apps/workers/src/law/mojLawApi.ts`
+- 라우터: `apps/workers/src/index.ts` (lines 224-280)
+- 테스트 URL: `https://safe-ops-studio-workers.yosep102033.workers.dev/api/test/moj-law-api`
+
+---
+
+## ✅ 2025-10-29 Critical Fixes (COMPLETED)
+
+### What Was Done:
+
+#### 1. 이미지 생성 오류 수정 ✅
+**문제**: "Data validation warning: laws: Too big: expected array to have <=10 items"
+- Gemini API가 `laws` 배열을 최대 10개로 제한
+- `matchLaws()` 함수가 무제한으로 법령 반환
+
+**해결책**: `apps/workers/src/law/matcher.ts`
+- laws 배열을 `.slice(0, 10)`으로 제한 (line 197)
+- Gemini API validation 준수
+
+**코드 변경**:
+```typescript
+// Remove duplicates
+const unique = laws.filter((law, index, self) =>
+  index === self.findIndex(l => l.title === law.title)
+);
+
+// Limit to 10 laws to comply with Gemini API validation
+// (Gemini expects laws array to have <=10 items for image generation)
+return unique.slice(0, 10);
+```
+
+#### 2. 액세스 키 요구 제거 ✅
+**문제**: 일반 사용자가 OPS를 저장할 때 액세스 키 요구
+- `/api/ops/save` 엔드포인트가 `requireAuth`로 보호됨
+- 일반 사용자는 OPS를 생성하고 발행할 수 있어야 함
+
+**해결책**: `apps/workers/src/index.ts`
+- `/api/ops/save` 엔드포인트를 public으로 변경 (line 109-120)
+- 액세스 키는 관리자 전용 기능에만 사용:
+  - `/api/subscribers` (구독자 리스트 조회)
+  - `/api/send` (이메일 발송)
+
+**코드 변경**:
+```typescript
+// OPS save endpoint (public - anyone can save their OPS)
+if (path === '/api/ops/save') {
+  const response = await handleSaveOPS(request, env);
+  // ... CORS headers
+}
+```
+
+#### 3. 배포 및 테스트 ✅
+**배포 정보**:
+- Version ID: `5c74d286-f4ad-46db-bfb3-06315bb927ad`
+- URL: https://safe-ops-studio-workers.yosep102033.workers.dev
+- Upload: 133.99 KiB / gzip: 29.31 KiB
+- Startup Time: 13 ms
+
+**프로덕션 테스트 결과**:
+```bash
+curl -X POST .../api/ops/generate \
+  -d '{"incidentDate":"2025-01-15T10:00:00","location":"서울 건설 현장","incidentType":"추락","incidentCause":"3층 높이에서 안전벨트 미착용으로 추락"}'
+
+# ✅ Response:
+{
+  "success": true,
+  "data": {
+    "laws": [...], // 정확히 10개
+    "imageMeta": {
+      "type": "generated",
+      "url": "data:image/png;base64,..." // 이미지 생성 성공
+    }
+  }
+}
+```
+
+### Technical Details:
+
+**수정된 파일**:
+1. `apps/workers/src/law/matcher.ts` (line 195-197)
+   - laws 배열 크기 제한 추가
+
+2. `apps/workers/src/index.ts` (line 109-120)
+   - `/api/ops/save` 액세스 키 제거
+
+**영향 받는 기능**:
+- ✅ 이미지 생성: laws 배열이 10개를 초과해도 오류 없음
+- ✅ OPS 저장: 일반 사용자가 액세스 키 없이 저장 가능
+- ✅ 법령 매칭: 최대 10개의 가장 관련성 높은 법령 표시
+
+**남아있는 보호된 엔드포인트** (액세스 키 필요):
+- `POST /api/law/rules` - 법령 규칙 생성
+- `PUT /api/law/rules/:id` - 법령 규칙 수정
+- `DELETE /api/law/rules/:id` - 법령 규칙 삭제
+- `GET /api/subscribers` - 구독자 리스트 조회
+- `POST /api/send` - 이메일 발송
+
+---
+
 **Note**: This file is referenced in `CLAUDE.md`. Always update this file when completing tasks or encountering issues.
