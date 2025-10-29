@@ -1381,4 +1381,77 @@ WHERE law_title LIKE '%화학물질관리법%';
 
 ---
 
+## ✅ 2025-10-29 Demo Samples Simplification (COMPLETED)
+
+### What Was Done:
+
+#### 문제
+- 기존 대표사례 3가지가 너무 복잡하여 Gemini 무료 API로 삽화 생성 시 품질 저하
+- 생성된 이미지에 문자(텍스트)가 지저분하게 나타나는 현상
+- 복잡한 설비(200톤 사출성형기, 황산 탱크 등)는 KOSHA 만화 스타일로 표현 어려움
+
+#### 해결책
+
+**대표사례 단순화**:
+
+| Before (복잡) | After (단순) |
+|-------------|------------|
+| 추락: 비계 12m 높이, 안전난간, 추락방지망 | **사다리 3m 추락** 🪜 |
+| 끼임: 200톤 사출성형기, 금형 교체 | **컨베이어 벨트 끼임** ⚙️ |
+| 화학물질: 황산 98%, 50톤 탱크 | **용접 불티 화재** 🔥 |
+
+**시각적 명확성**:
+- Fall (추락): 사다리, 떨어지는 사람, motion arc
+- Fire (화재): 불꽃, 연기, 포장재
+- Caught (끼임): 벨트, 롤러, 손 끼임
+
+**incidentCause 간소화**:
+- 기존: 10-20줄의 세부 사항 (사고 당시 상황, 직접 원인, 관리적 원인)
+- 개선: 2-3줄의 핵심 내용만 (사고 개요 + 주요 원인)
+
+#### 배포 정보
+- Frontend Deployment: https://b0668316.kosha-8ad.pages.dev
+- Production URL: https://kosha-8ad.pages.dev/builder
+- Git Commit: `a279e4f`
+
+#### 기대 효과
+- ✅ Gemini가 그리기 쉬운 단순한 시나리오
+- ✅ 생성된 이미지 품질 향상 (텍스트 아티팩트 감소)
+- ✅ KOSHA 만화 스타일에 적합한 명확한 시각 요소
+- ✅ 사용자 이해도 향상 (불필요한 세부사항 제거)
+
+### Technical Details:
+
+**수정된 파일**:
+- `apps/web/lib/demo-samples.ts`
+  - 3개 예시 ID, label, description, formData 전체 교체
+  - incidentCause 길이: 평균 85% 감소 (500자→75자)
+
+**새로운 예시 구조**:
+```typescript
+{
+  id: 'fall-ladder',
+  label: '추락 사례',
+  description: '사다리 작업 중 추락 재해',
+  icon: '🪜',
+  formData: {
+    title: '사다리 작업 중 추락 사망사고',
+    hazardObject: 'A형 사다리 (높이 3m)',
+    incidentCause: '작업자가 3m 높이의 A형 사다리에서 천장 조명 교체 작업 중 사다리가 미끄러지며 추락하여 사망함. 사다리 하단 고정 장치 미사용, 안전모 미착용 상태였음.',
+  }
+}
+```
+
+**AI 삽화 생성 최적화**:
+- 단순한 물체 (사다리, 컨베이어, 불꽃)
+- 명확한 행동 (떨어짐, 끼임, 화재)
+- KOSHA 스타일 가이드 호환성 향상:
+  - 2px black outlines
+  - Flat colors
+  - Yellow helmet, blue/gray clothes
+  - Red danger zones
+  - NO text in illustration
+
+---
+
 **Note**: This file is referenced in `CLAUDE.md`. Always update this file when completing tasks or encountering issues.
