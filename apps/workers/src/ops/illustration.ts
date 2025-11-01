@@ -103,8 +103,10 @@ Visual style: Isometric 3/4 view, CAD-style rendering, OSHA safety colors, studi
  * - These are fatal workplace accidents for government safety reports
  * - Workers must show alarm/distress, NEVER smiling or happy
  * - Reference: Official KOSHA safety manual illustrations
+ *
+ * UPDATED (2025-11-01): Strengthened NO TEXT requirement to prevent Korean character artifacts
  */
-const KOSHA_STYLE_COMPACT = `KOSHA safety manual: cartoon with 2px black outlines, flat colors. Yellow helmet, blue/gray work clothes, red danger zones, white cloud effects. Light gray background. NO text, NO gradients. CRITICAL: Worker's face shows DISTRESS - furrowed worried eyebrows, mouth open in alarm, eyes wide in shock. NOT smiling, NOT happy. Panicked body language (arms flailing, falling). Serious safety incident, emergency situation. Yellow star burst at impact point.`.trim();
+const KOSHA_STYLE_COMPACT = `TEXT-FREE ILLUSTRATION ONLY. Absolutely NO written content: no letters, no words, no numbers, no Korean/Chinese/Japanese characters, no labels, no captions, no signage, no typography of any kind. Use ONLY visual symbols (icons, arrows, color coding). KOSHA safety manual style: cartoon with 2px black outlines, flat colors. Yellow helmet, blue/gray work clothes, red danger zones, white cloud effects. Light gray background. NO gradients. CRITICAL: Worker's face shows DISTRESS - furrowed worried eyebrows, mouth open in alarm, eyes wide in shock. NOT smiling, NOT happy. Panicked body language (arms flailing, falling). Serious safety incident, emergency situation. Yellow star burst at impact point.`.trim();
 
 /**
  * Generate detailed English prompt for AI image generation
@@ -149,7 +151,8 @@ function generateImagePromptFallback(input: OPSInput): string {
     : 'workplace';
 
   // Build compact prompt under 2048 chars
-  let prompt = `${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${translatedCause}.`;
+  // Start with TRIPLE-emphasized NO TEXT requirement to prevent Korean character artifacts
+  let prompt = `CRITICAL: TEXT-FREE IMAGE - DO NOT GENERATE ANY TEXT/LETTERS/CHARACTERS. This is a visual-only illustration. NO Korean text, NO Chinese characters, NO English words, NO numbers, NO labels, NO captions. ${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${translatedCause}.`;
 
   // Add type-specific details with emphasis on distress
   if (normalizedType.includes('fall') || normalizedType.includes('추락')) {
@@ -162,7 +165,7 @@ function generateImagePromptFallback(input: OPSInput): string {
     prompt += ' Worker in distress, concerned facial expression, emergency situation.';
   }
 
-  prompt += ' Yellow star at impact, white clouds showing force, red danger area. Serious tone, NOT happy. NO text.';
+  prompt += ' Yellow star at impact, white clouds showing force, red danger area. Serious tone, NOT happy. FINAL EMPHASIS (MANDATORY): This image MUST be 100% text-free. Absolutely FORBIDDEN: all text, all letters (Korean/Chinese/Japanese/English/any language), all numbers, all written characters, all labels, all captions, all signage, all typography. Do NOT attempt to write Korean characters - they will become distorted hieroglyphics. ONLY visual elements (drawings, shapes, colors, icons, arrows) are allowed. Pure visual communication only.';
 
   // Ensure under 2048 chars
   if (prompt.length > 2040) {

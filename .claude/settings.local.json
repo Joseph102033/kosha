@@ -53,7 +53,9 @@
       "mcp__cloudflare-docs__search_cloudflare_documentation",
       "WebSearch",
       "Bash(test -f apps/workers/.dev.vars)",
-      "WebFetch(domain:www.law.go.kr)"
+      "WebFetch(domain:www.law.go.kr)",
+      "Bash(pip install:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
