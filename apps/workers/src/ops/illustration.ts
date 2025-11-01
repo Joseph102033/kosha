@@ -5,61 +5,10 @@
 
 import type { OPSInput } from './models';
 import type { Env } from '../index';
-import { callGemini } from '../ai/gemini';
 
 
-/**
- * Generate scene description using Gemini AI
- * Analyzes incident details and creates detailed visual scene description
- */
-async function generateSceneDescriptionWithAI(input: OPSInput, env: Env): Promise<string | null> {
-  const prompt = `당신은 산업안전 기술 삽화 전문가입니다. 다음 재해 정보를 기반으로 정확하고 상세한 장면 묘사를 영문으로 작성하세요.
-
-**재해 정보:**
-- 재해 유형: ${input.incidentType}
-- 발생 장소: ${input.location}
-- 재해 개요: ${input.incidentCause}
-${input.agentObject ? `- 가해물: ${input.agentObject}` : ''}
-${input.hazardObject ? `- 위험물: ${input.hazardObject}` : ''}
-
-**요구사항:**
-
-1. **정확한 장면 묘사**: 재해 개요의 내용을 정확히 반영한 구체적인 장면
-   - 작업자의 위치, 자세, 행동
-   - 위험 요소의 구체적인 상태
-   - 안전 장비 착용/미착용 상태
-   - 환경 요소 (높이, 구조물, 주변 환경)
-
-2. **시각적 디테일**: 이미지 생성에 필요한 구체적인 시각 정보
-   - 시점 (isometric 3/4 view)
-   - 색상 (OSHA 안전색: yellow #FFCC00, orange #FF6600, red #CC0000)
-   - 조명 (studio lighting with shadows)
-   - 스타일 (professional technical diagram, CAD-style)
-
-3. **영문으로 작성**: 이미지 생성 AI가 이해할 수 있도록 영문으로 작성
-
-4. **간결함**: 500자 이내로 핵심만 간결하게
-
-**출력 형식 (Plain Text, 영문):**
-Professional technical safety illustration depicting [incident scenario].
-
-Scene details:
-- Worker: [position, posture, action, safety equipment status]
-- Hazard: [specific hazard element and its state]
-- Environment: [location context, structures, height]
-- Key elements: [specific details that must be visible]
-
-Visual style: Isometric 3/4 view, CAD-style rendering, OSHA safety colors, studio lighting.
-
-**중요**: 재해 개요(${input.incidentCause})의 내용을 정확히 반영하세요.`;
-
-  const response = await callGemini(prompt, env, {
-    temperature: 0.7,
-    maxOutputTokens: 1024,
-  });
-
-  return response;
-}
+// REMOVED: AI scene description generator no longer used
+// We now use ONLY pre-defined English descriptions to eliminate ALL Korean text
 
 /**
  * Compact KOSHA Style Guide for AI image generation
@@ -76,122 +25,109 @@ const KOSHA_STYLE_COMPACT = `TEXT-FREE ILLUSTRATION ONLY. Absolutely NO written 
 
 /**
  * Generate detailed English prompt for AI image generation
- * CRITICAL: Translate ALL Korean text to English to prevent text artifacts in images
+ * CRITICAL: Use ONLY pre-defined English descriptions to prevent ANY Korean text
+ * NO translation - direct English-only mapping to eliminate Korean artifacts
  */
 async function generateImagePrompt(input: OPSInput, env: Env): Promise<string> {
-  // Translate Korean incident info to English first
-  const englishDescription = await translateIncidentToEnglish(input, env);
+  // Use ONLY generic English descriptions - NO translation to prevent Korean text
+  const englishDescription = getGenericIncidentDescription(input.incidentType);
+  console.log('📝 Using generic English-only description (no translation):', englishDescription);
   return generateImagePromptWithEnglish(input, englishDescription);
 }
 
-/**
- * Translate Korean incident information to English using Gemini
- * This prevents Gemini Image API from seeing Korean text and generating Korean characters
- */
-async function translateIncidentToEnglish(input: OPSInput, env: Env): Promise<string> {
-  if (!env.GEMINI_API_KEY) {
-    console.warn('⚠️ GEMINI_API_KEY not configured, using generic description');
-    return getGenericIncidentDescription(input.incidentType);
-  }
-
-  const prompt = `Translate this Korean workplace accident description to concise English (max 2 sentences). Focus ONLY on the physical actions and objects involved. NO Korean text allowed in output.
-
-Incident type: ${input.incidentType}
-Korean description: ${input.incidentCause}
-
-Output ONLY English description (2 sentences max), nothing else:`;
-
-  try {
-    const response = await callGemini(prompt, env, {
-      temperature: 0.3,
-      maxOutputTokens: 128,
-    });
-
-    if (response && response.trim().length > 0) {
-      // Verify no Korean characters in response
-      const hasKorean = /[\u3131-\uD79D]/.test(response);
-      if (hasKorean) {
-        console.error('❌ Translation still contains Korean characters, using generic description');
-        return getGenericIncidentDescription(input.incidentType);
-      }
-
-      console.log('✅ Korean incident translated to English:', response.trim());
-      return response.trim();
-    }
-  } catch (error) {
-    console.error('❌ Translation failed:', error);
-  }
-
-  // Fallback to generic English-only description
-  console.log('⚠️ Using generic incident description (translation failed)');
-  return getGenericIncidentDescription(input.incidentType);
-}
+// REMOVED: Translation function no longer used
+// We now use ONLY pre-defined English descriptions to eliminate ALL Korean text
+// This prevents Gemini from generating Korean characters in images
 
 /**
  * Get generic incident description based on type (100% English, no Korean)
+ * Maps common incident types to simple, visual English descriptions
+ * NO Korean text in input or output - pure English for image generation
  */
 function getGenericIncidentDescription(incidentType: string): string {
   const normalized = incidentType.toLowerCase().trim();
 
-  if (normalized.includes('fall') || normalized === '추락') {
-    return 'Worker falling from elevated platform without proper safety equipment.';
-  } else if (normalized.includes('fire') || normalized === '화재') {
-    return 'Fire emergency with worker evacuating from burning workspace.';
-  } else if (normalized.includes('caught') || normalized.includes('equipment') || normalized === '끼임') {
-    return 'Worker hand caught in moving machinery between rollers.';
-  } else if (normalized.includes('chemical') || normalized === '화학물질') {
-    return 'Chemical spill with hazardous vapor exposure incident.';
-  } else {
-    return 'Workplace safety incident requiring immediate attention.';
+  // Fall incidents (추락)
+  if (normalized.includes('fall') || normalized.includes('추락') || normalized.includes('ladder') || normalized.includes('사다리')) {
+    return 'Worker falling from 3-meter ladder during overhead work. Person mid-air with limbs extended, motion lines showing downward movement. Ladder tipping over.';
   }
+
+  // Fire incidents (화재)
+  if (normalized.includes('fire') || normalized.includes('화재') || normalized.includes('burn') || normalized.includes('불') || normalized.includes('용접')) {
+    return 'Welding sparks igniting nearby flammable materials. Flames spreading, worker stepping back with alarmed expression. Fire extinguisher visible nearby.';
+  }
+
+  // Caught/entanglement incidents (끼임)
+  if (normalized.includes('caught') || normalized.includes('끼임') || normalized.includes('equipment') || normalized.includes('machinery') || normalized.includes('컨베이어') || normalized.includes('벨트') || normalized.includes('기계')) {
+    return 'Worker hand caught between conveyor belt and rotating roller. Hand being pulled into machinery gap. Emergency stop button nearby but not pressed.';
+  }
+
+  // Chemical incidents (화학물질)
+  if (normalized.includes('chemical') || normalized.includes('화학') || normalized.includes('leak') || normalized.includes('누출') || normalized.includes('독성')) {
+    return 'Chemical container leaking hazardous liquid forming puddle on floor. Worker nearby with insufficient protective equipment. Vapor clouds rising from spill.';
+  }
+
+  // Explosion incidents (폭발)
+  if (normalized.includes('explosion') || normalized.includes('폭발') || normalized.includes('blast')) {
+    return 'Explosive blast with debris flying outward. Pressure wave radiating from source. Worker being thrown backward by force of explosion.';
+  }
+
+  // Electrocution incidents (감전)
+  if (normalized.includes('electric') || normalized.includes('감전') || normalized.includes('shock') || normalized.includes('전기')) {
+    return 'Worker touching exposed electrical wire. Lightning bolt symbols showing electrical discharge. Person body rigid with shock, hair standing on end.';
+  }
+
+  // Struck by object (낙하물)
+  if (normalized.includes('struck') || normalized.includes('낙하') || normalized.includes('hit') || normalized.includes('충돌')) {
+    return 'Heavy object falling from above toward worker below. Worker looking up with alarm. Motion lines showing falling trajectory.';
+  }
+
+  // Generic fallback
+  return 'Workplace safety incident with worker in distress. Emergency situation requiring immediate safety intervention. Worker showing alarm and concern.';
 }
 
 /**
  * Build image generation prompt with English-only description
  * NO Korean text in prompt to prevent Korean characters in generated image
+ * ZERO TOLERANCE for ANY non-English text in this function
  */
 function generateImagePromptWithEnglish(input: OPSInput, englishDescription: string): string {
-  const typeMap: Record<string, string> = {
-    'fall': 'fall from height incident',
-    '추락': 'fall from height incident',
-    'chemical spill': 'chemical spill / hazmat incident',
-    '화학물질 누출': 'chemical spill / hazmat incident',
-    'fire': 'fire emergency',
-    '화재': 'fire emergency',
-    'explosion': 'explosion incident',
-    '폭발': 'explosion incident',
-    'equipment failure': 'equipment failure incident',
-    '장비 고장': 'equipment failure incident',
-    'other': 'workplace safety incident',
-    '기타': 'workplace safety incident',
-  };
-
+  // Map incident types to English descriptions (NO Korean keys)
   const normalizedType = input.incidentType.toLowerCase().trim();
-  const incidentTypeDesc = typeMap[normalizedType] || 'workplace safety incident';
+  let incidentTypeDesc = 'workplace safety incident';
 
-  // Extract location context (English only)
-  const locationContext = input.location?.includes('건설') || input.location?.includes('현장')
-    ? 'construction site'
-    : input.location?.includes('공장') || input.location?.includes('시설')
-    ? 'industrial facility'
-    : 'workplace';
-
-  // Build 100% English prompt - NO Korean text anywhere
-  // This prevents Gemini from generating Korean characters in the image
-  let prompt = `CRITICAL: TEXT-FREE IMAGE - DO NOT GENERATE ANY TEXT/LETTERS/CHARACTERS. This is a visual-only illustration. NO Korean text, NO Chinese characters, NO English words, NO numbers, NO labels, NO captions. ${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${englishDescription}.`;
-
-  // Add type-specific details with emphasis on distress
-  if (normalizedType.includes('fall') || normalizedType.includes('추락')) {
-    prompt += ' Fall: worker mid-air with panicked expression, arms flailing outward, mouth open in shock, dotted motion arc, scaffolding/ladder collapsing.';
-  } else if (normalizedType.includes('chemical') || normalizedType.includes('화학')) {
-    prompt += ' Chemical emergency: worker with distressed worried face, vapor/fume lines rising, protective gear insufficient, hazard container leaking.';
-  } else if (normalizedType.includes('fire') || normalizedType.includes('화재')) {
-    prompt += ' Fire emergency: worker showing alarm, flames/smoke, urgent evacuation posture.';
-  } else {
-    prompt += ' Worker in distress, concerned facial expression, emergency situation.';
+  if (normalizedType.includes('fall')) {
+    incidentTypeDesc = 'fall from height incident';
+  } else if (normalizedType.includes('chemical')) {
+    incidentTypeDesc = 'chemical spill hazmat incident';
+  } else if (normalizedType.includes('fire')) {
+    incidentTypeDesc = 'fire emergency';
+  } else if (normalizedType.includes('explosion')) {
+    incidentTypeDesc = 'explosion incident';
+  } else if (normalizedType.includes('caught') || normalizedType.includes('equipment')) {
+    incidentTypeDesc = 'machinery entanglement incident';
   }
 
-  prompt += ' Yellow star at impact, white clouds showing force, red danger area. Serious tone, NOT happy. FINAL EMPHASIS (MANDATORY): This image MUST be 100% text-free. Absolutely FORBIDDEN: all text, all letters (Korean/Chinese/Japanese/English/any language), all numbers, all written characters, all labels, all captions, all signage, all typography. Do NOT attempt to write Korean characters - they will become distorted hieroglyphics. ONLY visual elements (drawings, shapes, colors, icons, arrows) are allowed. Pure visual communication only.';
+  // Default to industrial facility (NO Korean location checks)
+  const locationContext = 'industrial facility';
+
+  // Build 100% English prompt - ZERO Korean text anywhere
+  let prompt = `ABSOLUTE REQUIREMENT: This image MUST contain ZERO text, ZERO letters, ZERO words in ANY language. No Korean. No English. No Chinese. No Japanese. No numbers. No labels. No captions. No signage. Only pure visual illustration. ${KOSHA_STYLE_COMPACT} Scene: ${incidentTypeDesc} at ${locationContext}. ${englishDescription} Worker wearing yellow safety helmet and gray work clothes, face showing DISTRESS (worried eyebrows, open mouth in alarm, wide shocked eyes). NOT smiling. Panicked body language.`;
+
+  // Add type-specific visual details (English only)
+  if (normalizedType.includes('fall')) {
+    prompt += ' Fall scene: person mid-air with arms flailing, dotted motion arc showing fall path, ladder or platform tipping over, yellow star burst at impact point.';
+  } else if (normalizedType.includes('chemical')) {
+    prompt += ' Chemical scene: container leaking liquid, vapor clouds rising, worker stepping back with alarmed face, puddle forming.';
+  } else if (normalizedType.includes('fire')) {
+    prompt += ' Fire scene: orange flames spreading, gray smoke, worker backing away urgently, fire extinguisher nearby.';
+  } else if (normalizedType.includes('caught') || normalizedType.includes('equipment')) {
+    prompt += ' Machinery scene: hand caught in equipment gap, rotating parts, emergency stop button visible, motion lines.';
+  } else {
+    prompt += ' Emergency scene: worker in visible distress, danger present, urgent situation.';
+  }
+
+  prompt += ' Visual elements: yellow star burst, white cloud puffs showing force, red danger zone highlighting hazard. Flat colors, 2px black outlines, KOSHA cartoon style. Light gray background. FINAL WARNING: If you generate ANY text characters (Korean/English/Chinese/numbers/symbols), you have FAILED. This MUST be a pure visual illustration with ZERO textual content. Do NOT add explanatory text. Do NOT add labels. Do NOT add captions. Visual communication ONLY through drawings.';
 
   // Ensure under 2048 chars
   if (prompt.length > 2040) {
@@ -199,9 +135,10 @@ function generateImagePromptWithEnglish(input: OPSInput, englishDescription: str
     prompt = prompt.substring(0, 2040);
   }
 
-  console.log('📝 Illustration prompt generated:', {
+  console.log('📝 100% English-only prompt generated:', {
     length: prompt.length,
-    preview: prompt.substring(0, 200) + '...',
+    hasKorean: /[\u3131-\uD79D]/.test(prompt),
+    preview: prompt.substring(0, 150) + '...',
   });
 
   return prompt;
