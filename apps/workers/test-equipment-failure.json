@@ -1,0 +1,8 @@
+{
+  "incidentDate": "2024-06-22T10:00:00",
+  "location": "경기도 평택시 산업단지 ㈜OO플라스틱 제1공장",
+  "incidentType": "Equipment Failure",
+  "incidentCause": "작업자가 사출성형기의 금형 교체 작업 중 기계가 예상치 못하게 작동하여 금형과 고정판 사이에 손이 끼여 중상을 입음. 기계 작동 차단 미실시, 안전 센서 고장 상태였음.",
+  "agentObject": "생산직 근로자",
+  "hazardObject": "200톤 사출성형기"
+}

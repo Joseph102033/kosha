@@ -7,40 +7,6 @@ import type { OPSInput } from './models';
 import type { Env } from '../index';
 import { callGemini } from '../ai/gemini';
 
-/**
- * Translate Korean incident cause to English for AI understanding
- */
-function translateIncidentCause(cause: string): string {
-  // Simple translation hints for common Korean terms
-  const translations: Record<string, string> = {
-    '안전벨트': 'safety harness',
-    '안전모': 'hard hat / safety helmet',
-    '추락': 'falling from height',
-    '비계': 'scaffolding',
-    '사다리': 'ladder',
-    '화학물질': 'chemical substance',
-    '누출': 'leak / spill',
-    '화재': 'fire',
-    '폭발': 'explosion',
-    '장비': 'equipment',
-    '고장': 'malfunction / failure',
-    '작업자': 'worker',
-    '현장': 'work site / construction site',
-    '건설': 'construction',
-    '공장': 'factory / facility',
-    '미착용': 'not wearing / without',
-    '부족': 'insufficient / lack of',
-    '불량': 'defective / faulty',
-    '부실': 'inadequate / poor',
-  };
-
-  let translated = cause;
-  for (const [korean, english] of Object.entries(translations)) {
-    translated = translated.replace(new RegExp(korean, 'g'), english);
-  }
-
-  return translated;
-}
 
 /**
  * Generate scene description using Gemini AI
@@ -124,34 +90,60 @@ async function generateImagePrompt(input: OPSInput, env: Env): Promise<string> {
  */
 async function translateIncidentToEnglish(input: OPSInput, env: Env): Promise<string> {
   if (!env.GEMINI_API_KEY) {
-    console.warn('⚠️ GEMINI_API_KEY not configured, using basic translation');
-    return translateIncidentCause(input.incidentCause || '');
+    console.warn('⚠️ GEMINI_API_KEY not configured, using generic description');
+    return getGenericIncidentDescription(input.incidentType);
   }
 
-  const prompt = `Translate this Korean workplace accident description to concise English (max 3 sentences). Focus on: what happened, where, and key safety violation.
+  const prompt = `Translate this Korean workplace accident description to concise English (max 2 sentences). Focus ONLY on the physical actions and objects involved. NO Korean text allowed in output.
 
-재해 유형: ${input.incidentType}
-장소: ${input.location}
-재해 개요: ${input.incidentCause}
+Incident type: ${input.incidentType}
+Korean description: ${input.incidentCause}
 
-Output ONLY the English description, nothing else:`;
+Output ONLY English description (2 sentences max), nothing else:`;
 
   try {
     const response = await callGemini(prompt, env, {
       temperature: 0.3,
-      maxOutputTokens: 256,
+      maxOutputTokens: 128,
     });
 
-    if (response) {
-      console.log('✅ Korean incident translated to English');
+    if (response && response.trim().length > 0) {
+      // Verify no Korean characters in response
+      const hasKorean = /[\u3131-\uD79D]/.test(response);
+      if (hasKorean) {
+        console.error('❌ Translation still contains Korean characters, using generic description');
+        return getGenericIncidentDescription(input.incidentType);
+      }
+
+      console.log('✅ Korean incident translated to English:', response.trim());
       return response.trim();
     }
   } catch (error) {
     console.error('❌ Translation failed:', error);
   }
 
-  // Fallback to basic translation
-  return translateIncidentCause(input.incidentCause || '');
+  // Fallback to generic English-only description
+  console.log('⚠️ Using generic incident description (translation failed)');
+  return getGenericIncidentDescription(input.incidentType);
+}
+
+/**
+ * Get generic incident description based on type (100% English, no Korean)
+ */
+function getGenericIncidentDescription(incidentType: string): string {
+  const normalized = incidentType.toLowerCase().trim();
+
+  if (normalized.includes('fall') || normalized === '추락') {
+    return 'Worker falling from elevated platform without proper safety equipment.';
+  } else if (normalized.includes('fire') || normalized === '화재') {
+    return 'Fire emergency with worker evacuating from burning workspace.';
+  } else if (normalized.includes('caught') || normalized.includes('equipment') || normalized === '끼임') {
+    return 'Worker hand caught in moving machinery between rollers.';
+  } else if (normalized.includes('chemical') || normalized === '화학물질') {
+    return 'Chemical spill with hazardous vapor exposure incident.';
+  } else {
+    return 'Workplace safety incident requiring immediate attention.';
+  }
 }
 
 /**
