@@ -110,18 +110,55 @@ const KOSHA_STYLE_COMPACT = `TEXT-FREE ILLUSTRATION ONLY. Absolutely NO written 
 
 /**
  * Generate detailed English prompt for AI image generation
- * Uses AI-generated scene description with KOSHA style guide
+ * CRITICAL: Translate ALL Korean text to English to prevent text artifacts in images
  */
 async function generateImagePrompt(input: OPSInput, env: Env): Promise<string> {
-  // Simplified approach: use compact style + incident details
-  // Skip Gemini for illustration prompt (causes MAX_TOKENS issues)
-  return generateImagePromptFallback(input);
+  // Translate Korean incident info to English first
+  const englishDescription = await translateIncidentToEnglish(input, env);
+  return generateImagePromptWithEnglish(input, englishDescription);
 }
 
 /**
- * Fallback: Template-based prompt generation
+ * Translate Korean incident information to English using Gemini
+ * This prevents Gemini Image API from seeing Korean text and generating Korean characters
  */
-function generateImagePromptFallback(input: OPSInput): string {
+async function translateIncidentToEnglish(input: OPSInput, env: Env): Promise<string> {
+  if (!env.GEMINI_API_KEY) {
+    console.warn('⚠️ GEMINI_API_KEY not configured, using basic translation');
+    return translateIncidentCause(input.incidentCause || '');
+  }
+
+  const prompt = `Translate this Korean workplace accident description to concise English (max 3 sentences). Focus on: what happened, where, and key safety violation.
+
+재해 유형: ${input.incidentType}
+장소: ${input.location}
+재해 개요: ${input.incidentCause}
+
+Output ONLY the English description, nothing else:`;
+
+  try {
+    const response = await callGemini(prompt, env, {
+      temperature: 0.3,
+      maxOutputTokens: 256,
+    });
+
+    if (response) {
+      console.log('✅ Korean incident translated to English');
+      return response.trim();
+    }
+  } catch (error) {
+    console.error('❌ Translation failed:', error);
+  }
+
+  // Fallback to basic translation
+  return translateIncidentCause(input.incidentCause || '');
+}
+
+/**
+ * Build image generation prompt with English-only description
+ * NO Korean text in prompt to prevent Korean characters in generated image
+ */
+function generateImagePromptWithEnglish(input: OPSInput, englishDescription: string): string {
   const typeMap: Record<string, string> = {
     'fall': 'fall from height incident',
     '추락': 'fall from height incident',
@@ -140,19 +177,16 @@ function generateImagePromptFallback(input: OPSInput): string {
   const normalizedType = input.incidentType.toLowerCase().trim();
   const incidentTypeDesc = typeMap[normalizedType] || 'workplace safety incident';
 
-  // Translate incident cause for better AI understanding
-  const translatedCause = translateIncidentCause(input.incidentCause || '');
-
-  // Extract location context
+  // Extract location context (English only)
   const locationContext = input.location?.includes('건설') || input.location?.includes('현장')
     ? 'construction site'
     : input.location?.includes('공장') || input.location?.includes('시설')
     ? 'industrial facility'
     : 'workplace';
 
-  // Build compact prompt under 2048 chars
-  // Start with TRIPLE-emphasized NO TEXT requirement to prevent Korean character artifacts
-  let prompt = `CRITICAL: TEXT-FREE IMAGE - DO NOT GENERATE ANY TEXT/LETTERS/CHARACTERS. This is a visual-only illustration. NO Korean text, NO Chinese characters, NO English words, NO numbers, NO labels, NO captions. ${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${translatedCause}.`;
+  // Build 100% English prompt - NO Korean text anywhere
+  // This prevents Gemini from generating Korean characters in the image
+  let prompt = `CRITICAL: TEXT-FREE IMAGE - DO NOT GENERATE ANY TEXT/LETTERS/CHARACTERS. This is a visual-only illustration. NO Korean text, NO Chinese characters, NO English words, NO numbers, NO labels, NO captions. ${KOSHA_STYLE_COMPACT} ${incidentTypeDesc} at ${locationContext}. Worker in yellow helmet, ${locationContext === 'construction site' ? 'blue' : 'gray'} clothes, showing ALARM on face (worried eyebrows, open mouth). Scene: ${englishDescription}.`;
 
   // Add type-specific details with emphasis on distress
   if (normalizedType.includes('fall') || normalizedType.includes('추락')) {
