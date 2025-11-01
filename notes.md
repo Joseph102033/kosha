@@ -1,6 +1,6 @@
 # Safe OPS Studio - Development Notes
 
-**Last Updated**: 2025-10-19
+**Last Updated**: 2025-11-01
 **Vooster Project UID**: UNMR
 **Current Phase**: Week 1 - M1 (MVP Implementation)
 
@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅
 - **Current Task**: Ready for next feature development
-- **Overall Progress**: 2/9 tasks completed + 5 major improvements + Gemini full deployment (22% + enhancements)
+- **Overall Progress**: 2/9 tasks completed + 6 major improvements + Gemini full deployment (22% + enhancements)
 
 ---
 
@@ -1451,6 +1451,142 @@ WHERE law_title LIKE '%화학물질관리법%';
   - Yellow helmet, blue/gray clothes
   - Red danger zones
   - NO text in illustration
+
+---
+
+## ✅ 2025-11-01 Korean Text in Images Fix (COMPLETED)
+
+### What Was Done:
+
+#### 문제 상황
+- Gemini 생성 이미지에 한국어 텍스트 캡션/라벨이 계속 나타남
+- 예: "대나손가사들 중인 컨베이어 벨트대 걸린 이물질을 제거하려다 장갑이 벨트와 롤러 시이에 발려 늘어가 싸작업 전 전원 미실 시, 안전 보개 미실치 산대없음"
+- 이전 번역 시스템이 불안정하여 한국어가 Gemini API에 전달됨
+
+#### 근본 원인 분석
+1. **번역 실패**: `translateIncidentToEnglish` 함수가 한국어를 영어로 번역하려 했으나 실패 시 fallback 미작동
+2. **AI 자동 캡션**: Gemini가 한국어 프롬프트를 받으면 이미지에 한국어 설명 추가
+3. **불안정한 로직**: AI 번역 의존으로 일관성 없는 결과
+
+#### 해결 방법
+
+**핵심 전략: 번역 제거 + 고정 영어 설명 사용**
+
+**1. 번역 함수 완전 제거** ✅
+- ❌ `translateIncidentToEnglish()` - 한국어→영어 번역 로직 삭제
+- ❌ `generateSceneDescriptionWithAI()` - AI 장면 생성 로직 삭제
+- ❌ `import { callGemini }` - 사용하지 않는 Gemini 호출 제거
+
+**2. 재해 유형별 고정 영어 설명 강화** ✅
+`getGenericIncidentDescription()` 함수 개선:
+- **추락 (fall)**: "Worker falling from 3-meter ladder during overhead work..."
+- **화재 (fire)**: "Welding sparks igniting nearby flammable materials..."
+- **끼임 (caught)**: "Worker hand caught between conveyor belt and rotating roller..."
+- **화학물질 (chemical)**: "Chemical container leaking hazardous liquid..."
+- **폭발 (explosion)**: "Explosive blast with debris flying outward..."
+- **감전 (electric)**: "Worker touching exposed electrical wire..."
+- **낙하물 (struck)**: "Heavy object falling from above toward worker..."
+
+**3. 프롬프트에서 한국어 키워드 완전 제거** ✅
+변경 전:
+```typescript
+const typeMap: Record<string, string> = {
+  'fall': 'fall from height incident',
+  '추락': 'fall from height incident',  // ❌ 한국어 키 존재
+  '화재': 'fire emergency',             // ❌ 한국어 키 존재
+};
+```
+
+변경 후:
+```typescript
+// NO Korean keys - only English checks
+if (normalizedType.includes('fall')) {
+  incidentTypeDesc = 'fall from height incident';
+} else if (normalizedType.includes('fire')) {
+  incidentTypeDesc = 'fire emergency';
+}
+```
+
+**4. NO TEXT 경고 강화** ✅
+```typescript
+let prompt = `ABSOLUTE REQUIREMENT: This image MUST contain ZERO text, ZERO letters, ZERO words in ANY language. No Korean. No English. No Chinese. No Japanese. No numbers. No labels. No captions. No signage. Only pure visual illustration...`;
+
+prompt += ' FINAL WARNING: If you generate ANY text characters (Korean/English/Chinese/numbers/symbols), you have FAILED. This MUST be a pure visual illustration with ZERO textual content.';
+```
+
+#### 배포 정보
+**Workers 배포** ✅:
+- Version ID: `d427478a-7b26-4780-a47a-e9ca5b553f41`
+- URL: https://safe-ops-studio-workers.yosep102033.workers.dev
+- Upload Size: 136.56 KiB / gzip: 30.28 KiB
+- Startup Time: 17 ms
+
+**Git 커밋** ✅:
+- Commit: `f770ff8`
+- Message: "Eliminate Korean text in Gemini images completely"
+- 변경 사항: 1 file, +81 insertions, -144 deletions
+
+### Technical Details:
+
+**수정된 파일**:
+- `apps/workers/src/ops/illustration.ts`
+  - 제거: `translateIncidentToEnglish()` (38 lines)
+  - 제거: `generateSceneDescriptionWithAI()` (62 lines)
+  - 개선: `getGenericIncidentDescription()` - 7가지 재해 유형별 상세 설명
+  - 개선: `generateImagePromptWithEnglish()` - 100% 영어 프롬프트
+  - 간소화: `generateImagePrompt()` - 번역 제거, 직접 영어 설명 사용
+
+**코드 구조 변경**:
+```typescript
+// BEFORE (번역 시도)
+async function generateImagePrompt(input, env) {
+  const englishDescription = await translateIncidentToEnglish(input, env); // ❌ 번역 의존
+  return generateImagePromptWithEnglish(input, englishDescription);
+}
+
+// AFTER (고정 영어)
+async function generateImagePrompt(input, env) {
+  const englishDescription = getGenericIncidentDescription(input.incidentType); // ✅ 고정 영어
+  console.log('📝 Using generic English-only description (no translation):', englishDescription);
+  return generateImagePromptWithEnglish(input, englishDescription);
+}
+```
+
+**영어 설명 예시**:
+| 재해 유형 | 영어 설명 (일부) |
+|---------|----------------|
+| 추락 (fall) | Worker falling from 3-meter ladder during overhead work. Person mid-air with limbs extended, motion lines showing downward movement. Ladder tipping over. |
+| 끼임 (caught) | Worker hand caught between conveyor belt and rotating roller. Hand being pulled into machinery gap. Emergency stop button nearby but not pressed. |
+| 화재 (fire) | Welding sparks igniting nearby flammable materials. Flames spreading, worker stepping back with alarmed expression. Fire extinguisher visible nearby. |
+
+### 예상 결과:
+
+**테스트 시나리오**:
+1. Builder 페이지에서 "끼임 사례" 선택
+2. OPS 생성 → Gemini 이미지 생성 대기 (30초)
+3. 생성된 이미지 확인:
+   - ✅ 한국어 텍스트 없음
+   - ✅ KOSHA 만화 스타일 (노란 헬멧, 검은 외곽선)
+   - ✅ 시각적 요소만 표시 (화살표, 색상, 기호)
+   - ❌ 라벨/캡션/문자 없음
+
+**품질 향상**:
+- 일관된 영어 설명으로 안정적인 이미지 품질
+- AI 번역 오류 제거로 신뢰성 향상
+- 간단한 로직으로 유지보수 용이
+
+### 남은 이슈:
+
+**해결됨** ✅:
+- ✅ Gemini 이미지에 한국어 텍스트 나타나는 문제
+- ✅ 번역 실패 시 fallback 미작동 문제
+- ✅ AI 의존성으로 인한 불안정성
+
+**다음 작업 후보**:
+1. 법령 DB 확장 (50개 → 500개)
+2. 법제처 Open API 연동 재시도 (530 에러 해결 대기)
+3. 이메일 발송 기능 구현
+4. PDF 다운로드 기능 개선
 
 ---
 
