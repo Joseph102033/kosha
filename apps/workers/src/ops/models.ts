@@ -14,6 +14,7 @@ export interface OPSInput {
 export interface LawReference {
   title: string;
   url: string;
+  article_text?: string; // Optional: full text of the law article from D1
 }
 
 export interface OPSDocument {

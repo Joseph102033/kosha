@@ -140,16 +140,17 @@ export async function matchLaws(
     if (keywords.length > 0) {
       const placeholders = keywords.map(() => '?').join(',');
       const query = await env.DB.prepare(
-        `SELECT DISTINCT law_title, url FROM law_rules WHERE keyword IN (${placeholders})`
+        `SELECT DISTINCT law_title, url, article_text FROM law_rules WHERE keyword IN (${placeholders})`
       )
         .bind(...keywords)
-        .all<{ law_title: string; url: string }>();
+        .all<{ law_title: string; url: string; article_text: string | null }>();
 
       if (query.results && query.results.length > 0) {
         query.results.forEach(row => {
           laws.push({
             title: row.law_title,
             url: row.url,
+            article_text: row.article_text || undefined,
           });
         });
       }
