@@ -1,6 +1,6 @@
 # Safe OPS Studio - Development Notes
 
-**Last Updated**: 2025-11-01
+**Last Updated**: 2025-11-06
 **Vooster Project UID**: UNMR
 **Current Phase**: Week 1 - M1 (MVP Implementation)
 
@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅
-- **Current Task**: Ready for next feature development
-- **Overall Progress**: 2/9 tasks completed + 6 major improvements + Gemini full deployment (22% + enhancements)
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅, Law Matching Enhancement (2025-11-06) ✅
+- **Current Task**: Testing improved law matching system
+- **Overall Progress**: 2/9 tasks completed + 7 major improvements + law matching optimization (22% + enhancements)
 
 ---
 
@@ -1583,10 +1583,204 @@ async function generateImagePrompt(input, env) {
 - ✅ AI 의존성으로 인한 불안정성
 
 **다음 작업 후보**:
-1. 법령 DB 확장 (50개 → 500개)
+1. ~~법령 DB 확장 (50개 → 500개)~~ ✅ 완료 (1,139개)
 2. 법제처 Open API 연동 재시도 (530 에러 해결 대기)
 3. 이메일 발송 기능 구현
 4. PDF 다운로드 기능 개선
+
+---
+
+## ✅ 2025-11-06 Law Matching Enhancement (COMPLETED)
+
+### What Was Done:
+
+#### 1. 법령 DB 상태 확인 ✅
+**확인 결과**:
+- 총 법령: **1,139개** (이미 완료됨)
+- 법령 본문 포함: **794개 (69.7%)** with `article_text`
+- DB 크기: 13.29 MB
+- 법령 분포:
+  - 산업안전보건기준에 관한 규칙: 1,112개 (97.6%)
+  - 산업안전보건법 (본법): 22개
+  - 화학물질관리법: 2개
+  - 기타: 3개
+
+**사전 작업 완료 확인** (2025-11-06 00:43):
+- ✅ `law.docx` 파싱 완료
+- ✅ Python 스크립트: `extract_law_articles.py`, `generate_update_sql.py`
+- ✅ SQL 업데이트: `law_rules_update_full.sql` (800줄)
+- ✅ JSON 데이터: `law_rules_with_text.json` (6,356줄)
+- ✅ Workers API가 `article_text` 반환
+
+#### 2. 법령 매칭 로직 문제점 발견 ✅
+**사용자 피드백**:
+"컨베이어 끼임" 사고에 관련 없는 법령이 많이 나옴
+- ❌ 산업안전보건기준에 관한 규칙 제42조 (추락의 방지)
+- ❌ 산업안전보건기준에 관한 규칙 제37조 (악천후 작업 중지)
+- ❌ 산업안전보건기준에 관한 규칙 제9조 (작업발판 등)
+
+**근본 원인 분석**:
+1. **너무 일반적인 키워드 추출**: "일반", "작업장", "보호구" 등
+   - "작업장" 키워드 → 128개 법령 매칭 (너무 광범위)
+   - "일반" 키워드 → 200개 법령 매칭
+2. **단순 IN 쿼리**: 키워드 1개만 일치해도 반환 (관련도 무시)
+3. **정렬 없음**: 무작위로 상위 10개만 자름
+
+#### 3. AI 키워드 추출 프롬프트 개선 ✅
+**파일 수정**: `apps/workers/src/law/matcher.ts` (lines 20-79)
+
+**주요 변경사항**:
+1. **구체적인 키워드만 추출** (3-5개로 축소)
+   - ✅ 좋은 예: "협착", "컨베이어", "끼임", "방호장치"
+   - ❌ 제외: "일반", "작업장", "보호구", "조명", "환기"
+
+2. **재해 유형별 핵심 키워드 예시 추가**:
+   - 추락: "추락", "안전난간", "개구부", "추락방지망"
+   - 협착/끼임: "협착", "끼임", "방호장치", "컨베이어", "비상정지"
+   - 감전: "감전", "전기", "절연", "접지", "누전차단기"
+   - 화재: "화재", "폭발", "인화성", "소화설비"
+   - 화학물질: "화학물질", "MSDS", "환기설비", "보호장갑"
+
+3. **설비/장비 이름 우선 포함**: 컨베이어, 사다리, 비계, 크레인 등
+
+4. **일반 키워드 필터링**: 추출 후 제외 키워드 리스트로 필터링
+
+5. **Temperature 낮춤**: 0.3 → 0.2 (더 집중된 키워드)
+
+#### 4. SQL 가중치 시스템 추가 ✅
+**파일 수정**: `apps/workers/src/law/matcher.ts` (lines 143-195)
+
+**구현 내용**:
+```typescript
+// 관련도 점수 계산
+const sql = `
+  SELECT
+    law_title,
+    url,
+    article_text,
+    (
+      -- Base score: keyword match count × 10
+      (SELECT COUNT(*) FROM law_rules AS lr2
+       WHERE lr2.law_title = law_rules.law_title
+       AND lr2.keyword IN (...)) * 10
+      +
+      -- Bonus: title contains keyword × 50
+      CASE
+        WHEN law_title LIKE '%컨베이어%' THEN 50
+        WHEN law_title LIKE '%협착%' THEN 50
+        ...
+      END
+    ) as relevance_score
+  FROM law_rules
+  WHERE keyword IN (...)
+  GROUP BY law_title, url, article_text
+  ORDER BY relevance_score DESC
+`;
+```
+
+**점수 시스템**:
+- 기본 점수: 키워드 매칭 개수 × 10점
+- 제목 보너스: 법령 제목에 키워드 포함 시 +50점
+- 정렬: 관련도 점수 내림차순 → 관련성 높은 법령 우선
+
+**디버깅 로그 추가**:
+```typescript
+console.log('🔍 Searching laws with keywords:', keywords);
+console.log(`✅ Found ${results.length} laws, top 5 scores:`, ...);
+```
+
+#### 5. Fallback 키워드 추출 개선 ✅
+**파일 수정**: `apps/workers/src/law/matcher.ts` (lines 84-120)
+
+**개선 사항**:
+1. **구체적인 설비/장비 키워드 우선**:
+   - 컨베이어 → ["컨베이어", "협착"]
+   - 사다리 → ["추락", "사다리"]
+   - 비계 → ["추락", "비계"]
+   - 크레인 → ["낙하물", "크레인"]
+
+2. **일반 키워드 제외**: 중복 제거 시 excludedKeywords 필터링
+
+#### 6. Git Commit & Push ✅
+**커밋 정보**:
+- Commit: `7fe70da`
+- Message: "Improve law matching relevance with AI and scoring system"
+- Files changed: 1 file, +72 insertions, -33 deletions
+
+**변경 사항**:
+- AI 프롬프트 개선 (구체적 키워드만)
+- SQL 가중치 시스템 (관련도 점수)
+- Fallback 로직 개선 (설비별 키워드)
+
+#### 7. GitHub Actions 자동 배포 ✅
+**배포 워크플로우**:
+- ✅ `.github/workflows/deploy.yml` 확인
+- ✅ `main` 브랜치 push 시 자동 트리거
+- ✅ 두 개의 Job 실행:
+  1. `deploy-web` - Next.js → Cloudflare Pages
+  2. `deploy-workers` - Workers API 배포
+
+**배포 정보**:
+- Push 시간: 2025-11-06 02:11 KST
+- GitHub Repository: https://github.com/Joseph102033/kosha
+- 자동 배포 진행 중 (약 2-3분 소요)
+
+### Technical Details:
+
+**예상 개선 효과**:
+
+| 항목 | Before | After |
+|------|--------|-------|
+| 키워드 개수 | 3-7개 (광범위) | 3-5개 (집중) |
+| 일반 키워드 | 포함 (일반, 작업장, 보호구) | ❌ 제외 |
+| 정렬 방식 | 무작위 | ✅ 관련도 점수 내림차순 |
+| 설비 키워드 | 미흡 | ✅ 우선 추출 |
+| Temperature | 0.3 | 0.2 (더 집중) |
+
+**예상 결과** (컨베이어 끼임 사고):
+- Before:
+  - ❌ 산업안전보건기준에 관한 규칙 제42조 (추락의 방지)
+  - ❌ 산업안전보건기준에 관한 규칙 제37조 (악천후 작업 중지)
+  - ❌ 산업안전보건기준에 관한 규칙 제9조 (작업발판 등)
+
+- After (기대):
+  - ✅ 산업안전보건기준에 관한 규칙 제88조 (컨베이어의 비상정지장치)
+  - ✅ 산업안전보건법 제84조 (유해·위험 기계·기구 등에 대한 방호조치)
+  - ✅ 산업안전보건기준에 관한 규칙 제121조 (사출성형기 등의 방호장치)
+  - ✅ 산업안전보건기준에 관한 규칙 제93조 (방호장치의 해체 금지)
+
+### Testing:
+
+**테스트 방법** (배포 완료 후):
+1. 웹사이트 접속: https://kosha-8ad.pages.dev/builder
+2. "끼임 사례" 대표 사례 클릭
+3. OPS 생성 후 "관련 법령 및 규정" 확인
+4. 관련 있는 법령이 상위에 표시되는지 확인
+
+**검증 포인트**:
+- ✅ 컨베이어 관련 법령이 최상위에 표시
+- ✅ 추락/악천후 등 관련 없는 법령 제거
+- ✅ 관련도 점수 순으로 정렬
+
+### Summary:
+
+**완료 항목**:
+1. ✅ 법령 DB 상태 확인 (1,139개 이미 완료)
+2. ✅ AI 키워드 추출 로직 개선 (일반 키워드 제외)
+3. ✅ SQL 가중치 시스템 구현 (관련도 점수 기반 정렬)
+4. ✅ Fallback 키워드 추출 개선 (설비별 키워드)
+5. ✅ Git commit & push to GitHub
+6. ✅ GitHub Actions 자동 배포 트리거
+
+**배포 상태**:
+- ✅ 코드 백업 완료 (GitHub)
+- ⏳ 자동 배포 진행 중
+- ⏭️ 테스트 대기 중 (배포 완료 후)
+
+**다음 단계**:
+- 배포 완료 후 프로덕션 테스트
+- 법령 매칭 정확도 검증
+- 필요시 추가 개선
 
 ---
 
