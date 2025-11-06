@@ -1784,4 +1784,328 @@ console.log(`✅ Found ${results.length} laws, top 5 scores:`, ...);
 
 ---
 
+## 📋 2025-11-06 Code Refactoring Plan (PLANNED)
+
+### Current Status Assessment
+
+**프로젝트 건강도**: ⭐⭐⭐☆☆ (보통)
+
+#### ✅ 강점
+- 도메인 주도 설계 구조 (ops/, law/, subscriptions/, delivery/)
+- TypeScript 타입 안정성 양호
+- 최근 law/matcher.ts 개선 완료 (관련도 스코어링)
+- 일부 컴포넌트 설계 우수 (Preview.tsx, gemini.ts)
+
+#### ❌ 약점
+- **Critical Issue 1**: `index.ts` 615줄 (너무 긴 파일)
+- **Critical Issue 2**: `builder.tsx` 829줄 (너무 긴 파일)
+- 반복적인 CORS 처리 코드 (20회 이상)
+- 미들웨어 패턴 미사용
+
+---
+
+### 🔴 Priority 1: Critical Issues (즉시 개선 필요)
+
+#### 1. apps/workers/src/index.ts - 615 lines
+
+**문제점**:
+- 동일한 CORS 헤더 적용 코드 20회 반복
+- 15개 이상의 라우트 핸들러가 하나의 파일에 집중
+- 유지보수 어려움 (코드 변경 시 600줄 전체 확인 필요)
+
+**해결 방안**:
+1. **CORS 미들웨어 생성** (추천, 낮은 리스크)
+   ```typescript
+   // src/middleware/cors.ts
+   export function applyCors(response: Response): Response {
+     const headers = new Headers(response.headers);
+     Object.entries(corsHeaders).forEach(([key, value]) => {
+       headers.set(key, value);
+     });
+     return new Response(response.body, {
+       status: response.status,
+       headers,
+     });
+   }
+
+   // 사용: return applyCors(response); // 1줄로 축약
+   ```
+
+2. **라우터 패턴 도입** (권장, 중간 리스크)
+   - 각 도메인별 라우터 분리 (ops, law, subscriptions, delivery)
+   - index.ts를 100줄 미만으로 축약
+   - 라우트별 격리 테스트 가능
+
+**예상 효과**:
+- 615줄 → 100줄 미만 (80% 감소)
+- CORS 중복 코드 제거 (20회 → 1회)
+- 테스트 용이성 향상
+
+**예상 작업 시간**: 2-3시간 (CORS 미들웨어), 4-6시간 (라우터 패턴)
+
+---
+
+#### 2. apps/web/pages/builder.tsx - 829 lines
+
+**문제점**:
+- 단일 컴포넌트에 7가지 관심사 혼재:
+  1. 폼 상태 관리
+  2. 미리보기 생성 로직 (76줄 useEffect)
+  3. 발행 상태 관리
+  4. 이메일 모달
+  5. 구독자 관리
+  6. 인증 모달
+  7. 액세스 키 관리
+
+**해결 방안**:
+1. **커스텀 훅 분리**
+   ```typescript
+   // hooks/useOPSForm.ts
+   export function useOPSForm() {
+     const [formData, setFormData] = useState({...});
+     const handleInputChange = (field, value) => {...};
+     return { formData, handleInputChange };
+   }
+
+   // hooks/useOPSPreview.ts
+   export function useOPSPreview(formData) {
+     // 76줄 useEffect 로직 이동
+     return { previewState, preview, error };
+   }
+
+   // hooks/useOPSPublish.ts
+   export function useOPSPublish() {
+     const handlePublish = async (formData, preview) => {...};
+     return { isPublishing, publishedUrl, handlePublish };
+   }
+   ```
+
+2. **모달 컴포넌트 분리**
+   ```typescript
+   // components/AuthModal.tsx (60줄 → 독립 파일)
+   // components/PublishSuccessModal.tsx (60줄 → 독립 파일)
+   // components/EmailSendModal.tsx (130줄 → 독립 파일)
+   ```
+
+**예상 효과**:
+- 829줄 → 250줄 (70% 감소)
+- 커스텀 훅 재사용 가능 (다른 페이지에서도 활용)
+- 단위 테스트 가능 (각 훅과 모달 독립 테스트)
+
+**예상 작업 시간**: 4-6시간
+
+---
+
+### 🟡 Priority 2: Medium Priority (권장 개선)
+
+#### 3. 테스트 커버리지 부족
+
+**현황**:
+- `/tests` 폴더 존재하지만 구체적 테스트 파일 확인 안됨
+- TDD 가이드라인은 있지만 실제 적용 여부 불명
+
+**해결 방안**:
+```typescript
+// apps/workers/src/law/matcher.test.ts
+describe('matchLaws', () => {
+  it('should return relevant laws for conveyor incident', async () => {
+    const laws = await matchLaws('협착', undefined, '컨베이어', mockEnv, '컨베이어에 끼임');
+    expect(laws[0].title).toContain('컨베이어');
+    expect(laws[0].title).not.toContain('추락');
+  });
+});
+```
+
+**예상 작업 시간**: 8-12시간
+
+---
+
+#### 4. 에러 처리 일관성 부족
+
+**문제 사례**:
+- subscribe.ts: `new Response(JSON.stringify({...}), {...})`
+- index.ts: `Response.json({...}, {...})`
+
+**해결 방안**:
+```typescript
+// src/utils/response.ts
+export function errorResponse(message: string, status: number): Response {
+  return Response.json({ success: false, error: message }, { status });
+}
+
+export function successResponse<T>(data: T): Response {
+  return Response.json({ success: true, data });
+}
+```
+
+**예상 작업 시간**: 1-2시간
+
+---
+
+### 🟢 Priority 3: Low Priority (선택적 개선)
+
+#### 5. 매직 넘버 및 하드코딩 값
+
+**예시**:
+- `composer.ts:127` - `temperature: 0.5, maxOutputTokens: 4096`
+- `matcher.ts:78` - `return filtered.slice(0, 5);` // 왜 5개?
+- `builder.tsx:84` - `setTimeout(() => {...}, 300);` // 왜 300ms?
+
+**해결 방안**:
+```typescript
+// src/config/constants.ts
+export const AI_CONFIG = {
+  CAUSE_ANALYSIS_TEMPERATURE: 0.5,
+  MAX_OUTPUT_TOKENS: 4096,
+  MAX_KEYWORDS: 5,
+  PREVIEW_DUMMY_DELAY_MS: 300,
+  PREVIEW_DEBOUNCE_MS: 1000,
+} as const;
+```
+
+**예상 작업 시간**: 1시간
+
+---
+
+#### 6. 타입 정의 중복
+
+**예시**:
+- `ops/models.ts`: `LawReference { title, url }`
+- `law/models.ts`: `LawRule { law_title, url }` // 중복?
+
+**해결 방안**: 공통 타입을 `src/types/` 폴더로 통합
+
+**예상 작업 시간**: 1시간
+
+---
+
+### 📅 Implementation Roadmap
+
+#### Phase 1 (1주차) - Critical Issues
+1. ✅ **index.ts CORS 미들웨어 추가** (2-3시간)
+   - 파일: `apps/workers/src/middleware/cors.ts` 신규 생성
+   - 영향: index.ts 615줄 → 약 400줄
+
+2. ✅ **builder.tsx 커스텀 훅 분리** (4-6시간)
+   - 파일: `apps/web/hooks/useOPSForm.ts`, `useOPSPreview.ts`, `useOPSPublish.ts` 신규 생성
+   - 영향: builder.tsx 829줄 → 약 250줄
+
+**예상 총 작업 시간**: 6-9시간
+
+---
+
+#### Phase 2 (2-3주차) - Medium Priority
+3. ✅ **라우터 패턴 도입** (선택, 4-6시간)
+   - 파일: `apps/workers/src/router.ts` 신규 생성
+   - 영향: index.ts 400줄 → 100줄 미만
+
+4. ✅ **테스트 작성** (8-12시간)
+   - matcher.test.ts, builder.test.tsx, gemini.test.ts 등
+
+5. ✅ **에러 처리 표준화** (1-2시간)
+
+---
+
+#### Phase 3 (4주차) - Optional Improvements
+6. ✅ 설정값 상수화 (1시간)
+7. ✅ 타입 정의 통합 (1시간)
+
+---
+
+### 💡 Quick Win: CORS Middleware (30분)
+
+**즉시 시작 가능한 최고 ROI 작업**:
+
+```typescript
+// apps/workers/src/middleware/cors.ts 생성
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export function applyCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    headers.set(key, value);
+  });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+// apps/workers/src/index.ts에서 사용
+import { applyCors } from './middleware/cors';
+
+// 20곳의 반복 코드를 모두:
+return applyCors(response);
+```
+
+**즉시 효과**:
+- index.ts: 615줄 → 약 450줄 (27% 감소)
+- 유지보수성 향상 (CORS 정책 변경 시 1곳만 수정)
+
+---
+
+### ⚖️ Risk Assessment
+
+| 작업 | 리스크 | 영향도 | 우선순위 |
+|------|--------|--------|----------|
+| CORS 미들웨어 | 🟢 낮음 | 🔴 높음 | **1위** |
+| builder.tsx 훅 분리 | 🟡 중간 | 🔴 높음 | **2위** |
+| 라우터 패턴 도입 | 🟡 중간 | 🟡 중간 | 3위 |
+| 테스트 작성 | 🟢 낮음 | 🟡 중간 | 4위 |
+| 에러 처리 표준화 | 🟢 낮음 | 🟢 낮음 | 5위 |
+
+---
+
+### 📝 Next Session Checklist
+
+**리팩토링 작업 시작 시**:
+1. 이 notes.md의 "Code Refactoring Plan" 섹션 확인
+2. Phase 1부터 순차적으로 진행
+3. 각 작업 완료 시:
+   - Git commit (명확한 메시지)
+   - 이 섹션에 진행 상황 업데이트
+   - 테스트 실행 (해당되는 경우)
+
+**Quick Start Command**:
+```bash
+# 1. CORS 미들웨어 작업 시작
+cd apps/workers/src
+mkdir -p middleware
+touch middleware/cors.ts
+
+# 2. Frontend 훅 분리 작업 시작
+cd apps/web
+mkdir -p hooks
+touch hooks/useOPSForm.ts hooks/useOPSPreview.ts hooks/useOPSPublish.ts
+```
+
+---
+
+### 📊 Progress Tracking
+
+**리팩토링 진행 상황** (업데이트 예정):
+- [ ] Phase 1-1: CORS 미들웨어 생성
+- [ ] Phase 1-2: builder.tsx 커스텀 훅 분리
+- [ ] Phase 2-1: 라우터 패턴 도입
+- [ ] Phase 2-2: 테스트 작성
+- [ ] Phase 2-3: 에러 처리 표준화
+- [ ] Phase 3-1: 설정값 상수화
+- [ ] Phase 3-2: 타입 정의 통합
+
+**예상 코드량 변화**:
+- Before: 1,444줄 (index.ts 615 + builder.tsx 829)
+- After: 약 450줄 (69% 감소)
+
+**예상 품질 향상**:
+- 유지보수성: ⭐⭐☆☆☆ → ⭐⭐⭐⭐☆
+- 테스트 용이성: ⭐☆☆☆☆ → ⭐⭐⭐⭐☆
+- 코드 중복: ⭐☆☆☆☆ → ⭐⭐⭐⭐☆
+
+---
+
 **Note**: This file is referenced in `CLAUDE.md`. Always update this file when completing tasks or encountering issues.
