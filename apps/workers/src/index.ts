@@ -24,6 +24,7 @@ import { handleSend } from './delivery/send';
 import { requireAuth } from './auth/middleware';
 import { getAnalytics } from './analytics/stats';
 import { searchLaws as searchMOJLaws, searchOccupationalSafetyLaws } from './law/mojLawApi';
+import { applyCors, handleCorsPrelight } from './middleware/cors';
 
 export interface Env {
   // D1 Database binding
@@ -46,77 +47,43 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS headers
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Access-Key',
-    };
-
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      return handleCorsPrelight();
     }
 
     try {
       // Health check endpoint
       if (path === '/health') {
-        return new Response(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return applyCors(
+          new Response(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), {
+            headers: { 'Content-Type': 'application/json' },
+          })
+        );
       }
 
       // API routes
       if (path === '/api/subscribe') {
         const response = await handleSubscribe(request, env);
-        // Add CORS headers to response
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // List subscribers endpoint (protected)
       if (path === '/api/subscribers') {
         const response = await requireAuth(request, env, handleListSubscribers);
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // OPS generation endpoint (public - for real-time preview)
       if (path === '/api/ops/generate') {
         const response = await handleGenerateOPS(request, env);
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // OPS save endpoint (public - anyone can save their OPS)
       if (path === '/api/ops/save') {
         const response = await handleSaveOPS(request, env);
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // Get public OPS by slug
@@ -124,14 +91,7 @@ export default {
       if (opsSlugMatch) {
         const slug = opsSlugMatch[1];
         const response = await handleGetOPS(slug, env);
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // Law rules endpoints
@@ -146,14 +106,7 @@ export default {
         } else {
           response = Response.json({ success: false, error: 'Method not allowed' }, { status: 405 });
         }
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // Law rules endpoints with ID
@@ -175,49 +128,39 @@ export default {
           response = Response.json({ success: false, error: 'Method not allowed' }, { status: 405 });
         }
 
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // Email sending endpoint (protected)
       if (path === '/api/send') {
         const response = await requireAuth(request, env, handleSend);
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-        return new Response(response.body, {
-          status: response.status,
-          headers,
-        });
+        return applyCors(response);
       }
 
       // Analytics endpoint (public - read-only)
       if (path === '/api/analytics' && request.method === 'GET') {
         try {
           const analytics = await getAnalytics(env);
-          return new Response(JSON.stringify({
-            success: true,
-            data: analytics,
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: analytics,
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Analytics error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get analytics',
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get analytics',
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -230,24 +173,28 @@ export default {
 
           const result = await searchMOJLaws(query, { display: 5, page: 1 });
 
-          return new Response(JSON.stringify({
-            success: true,
-            message: '법제처 API 연결 성공!',
-            data: result,
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              message: '법제처 API 연결 성공!',
+              data: result,
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('[TEST] MOJ Law API error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to test MOJ Law API',
-            stack: error instanceof Error ? error.stack : undefined,
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to test MOJ Law API',
+              stack: error instanceof Error ? error.stack : undefined,
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -258,24 +205,28 @@ export default {
 
           const laws = await searchOccupationalSafetyLaws();
 
-          return new Response(JSON.stringify({
-            success: true,
-            message: `${laws.length}개의 산업안전보건 관련 법령을 찾았습니다`,
-            data: laws,
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              message: `${laws.length}개의 산업안전보건 관련 법령을 찾았습니다`,
+              data: laws,
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('[TEST] Safety laws search error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to search safety laws',
-            stack: error instanceof Error ? error.stack : undefined,
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to search safety laws',
+              stack: error instanceof Error ? error.stack : undefined,
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -293,22 +244,26 @@ export default {
 
           const result = await searchLaws(env.DB, searchParams);
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: result
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: result
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Law search error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to search laws'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to search laws'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -325,22 +280,26 @@ export default {
 
           const result = await suggestLaws(env.DB, body);
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: result
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: result
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Law suggestion error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to suggest laws'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to suggest laws'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -349,22 +308,26 @@ export default {
         try {
           const titles = await getLawTitles(env.DB);
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: titles
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: titles
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Get law titles error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get law titles'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get law titles'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -373,22 +336,26 @@ export default {
         try {
           const stats = await getLawStats(env.DB);
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: stats
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: stats
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Get law stats error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get law statistics'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get law statistics'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -397,22 +364,26 @@ export default {
         try {
           const version = getRuleVersion();
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: version
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: version
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Get rule version error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get rule version'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get rule version'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -434,13 +405,15 @@ export default {
 
           // Validate selections
           if (!body.selections || !Array.isArray(body.selections)) {
-            return new Response(JSON.stringify({
-              success: false,
-              error: 'Invalid selections format'
-            }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            return applyCors(
+              new Response(JSON.stringify({
+                success: false,
+                error: 'Invalid selections format'
+              }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+              })
+            );
           }
 
           const result = await saveLawFeedback(env.OPS_CACHE, {
@@ -451,22 +424,26 @@ export default {
             selections: body.selections,
           });
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: result
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: result
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Save law feedback error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to save feedback'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to save feedback'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -476,43 +453,51 @@ export default {
           const documentHash = url.searchParams.get('hash');
 
           if (!documentHash) {
-            return new Response(JSON.stringify({
-              success: false,
-              error: 'Missing document hash parameter'
-            }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            return applyCors(
+              new Response(JSON.stringify({
+                success: false,
+                error: 'Missing document hash parameter'
+              }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+              })
+            );
           }
 
           const feedback = await getLawFeedback(env.OPS_CACHE, documentHash);
 
           if (!feedback) {
-            return new Response(JSON.stringify({
-              success: false,
-              error: 'Feedback not found'
-            }), {
-              status: 404,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            return applyCors(
+              new Response(JSON.stringify({
+                success: false,
+                error: 'Feedback not found'
+              }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' },
+              })
+            );
           }
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: feedback
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: feedback
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Get law feedback error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get feedback'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get feedback'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -533,22 +518,26 @@ export default {
             work_process: body.work_process,
           });
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: { document_hash: hash }
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: { document_hash: hash }
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Generate document hash error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to generate hash'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to generate hash'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -560,31 +549,37 @@ export default {
           const law = await getLawById(env.DB, lawId);
 
           if (!law) {
-            return new Response(JSON.stringify({
-              success: false,
-              error: 'Law not found'
-            }), {
-              status: 404,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            return applyCors(
+              new Response(JSON.stringify({
+                success: false,
+                error: 'Law not found'
+              }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' },
+              })
+            );
           }
 
-          return new Response(JSON.stringify({
-            success: true,
-            data: law
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: true,
+              data: law
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         } catch (error) {
           console.error('Get law error:', error);
-          return new Response(JSON.stringify({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get law'
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return applyCors(
+            new Response(JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to get law'
+            }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
       }
 
@@ -599,16 +594,20 @@ export default {
       // More routes will be added here
       // - GET  /api/news
 
-      return new Response(JSON.stringify({ error: 'Not Found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return applyCors(
+        new Response(JSON.stringify({ error: 'Not Found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     } catch (error) {
       console.error('Worker error:', error);
-      return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return applyCors(
+        new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
   },
 };
