@@ -20,8 +20,9 @@ import type { Env } from '../index';
  * - Reference: Official KOSHA safety manual illustrations
  *
  * UPDATED (2025-11-01): Strengthened NO TEXT requirement to prevent Korean character artifacts
+ * UPDATED (2025-11-06): Ultra-strengthened NO TEXT with pictogram examples + temperature 0.1
  */
-const KOSHA_STYLE_COMPACT = `TEXT-FREE ILLUSTRATION ONLY. Absolutely NO written content: no letters, no words, no numbers, no Korean/Chinese/Japanese characters, no labels, no captions, no signage, no typography of any kind. Use ONLY visual symbols (icons, arrows, color coding). KOSHA safety manual style: cartoon with 2px black outlines, flat colors. Yellow helmet, blue/gray work clothes, red danger zones, white cloud effects. Light gray background. NO gradients. CRITICAL: Worker's face shows DISTRESS - furrowed worried eyebrows, mouth open in alarm, eyes wide in shock. NOT smiling, NOT happy. Panicked body language (arms flailing, falling). Serious safety incident, emergency situation. Yellow star burst at impact point.`.trim();
+const KOSHA_STYLE_COMPACT = `CRITICAL: PURE VISUAL ILLUSTRATION - ZERO TEXT OR CHARACTERS. This is a pictogram/icon style image with NO written language whatsoever. Forbidden elements: letters, words, numbers, Korean characters (한글), Chinese characters (汉字), Japanese characters (ひらがな), Latin alphabet (ABC), Arabic numerals (123), symbols that resemble text, labels, captions, signage, typography. ONLY allowed: simple drawings, shapes, arrows, color coding. KOSHA safety manual style: cartoon with 2px black outlines, flat colors. Yellow helmet, blue/gray work clothes, red danger zones, white cloud effects. Light gray background. NO gradients. CRITICAL: Worker's face shows DISTRESS - furrowed worried eyebrows, mouth open in alarm, eyes wide in shock. NOT smiling, NOT happy. Panicked body language (arms flailing, falling). Serious safety incident, emergency situation. Yellow star burst at impact point.`.trim();
 
 /**
  * Generate detailed English prompt for AI image generation
@@ -112,7 +113,7 @@ function generateImagePromptWithEnglish(input: OPSInput, englishDescription: str
   const locationContext = 'industrial facility';
 
   // Build 100% English prompt - ZERO Korean text anywhere
-  let prompt = `ABSOLUTE REQUIREMENT: This image MUST contain ZERO text, ZERO letters, ZERO words in ANY language. No Korean. No English. No Chinese. No Japanese. No numbers. No labels. No captions. No signage. Only pure visual illustration. ${KOSHA_STYLE_COMPACT} Scene: ${incidentTypeDesc} at ${locationContext}. ${englishDescription} Worker wearing yellow safety helmet and gray work clothes, face showing DISTRESS (worried eyebrows, open mouth in alarm, wide shocked eyes). NOT smiling. Panicked body language.`;
+  let prompt = `NO TEXT MODE ACTIVATED: Generate a pictogram-style illustration with ABSOLUTELY NO WRITTEN CHARACTERS. This means: no letters of any alphabet, no Korean hangul (한/가/나), no Chinese hanzi (字), no Japanese kana (あ/ア), no English ABC, no numbers 123, no text-like symbols. Think: international airport signs, universal warning symbols, traffic signs - pure visual communication only. ${KOSHA_STYLE_COMPACT} Scene: ${incidentTypeDesc} at ${locationContext}. ${englishDescription} Worker wearing yellow safety helmet and gray work clothes, face showing DISTRESS (worried eyebrows, open mouth in alarm, wide shocked eyes). NOT smiling. Panicked body language.`;
 
   // Add type-specific visual details (English only)
   if (normalizedType.includes('fall')) {
@@ -127,7 +128,7 @@ function generateImagePromptWithEnglish(input: OPSInput, englishDescription: str
     prompt += ' Emergency scene: worker in visible distress, danger present, urgent situation.';
   }
 
-  prompt += ' Visual elements: yellow star burst, white cloud puffs showing force, red danger zone highlighting hazard. Flat colors, 2px black outlines, KOSHA cartoon style. Light gray background. FINAL WARNING: If you generate ANY text characters (Korean/English/Chinese/numbers/symbols), you have FAILED. This MUST be a pure visual illustration with ZERO textual content. Do NOT add explanatory text. Do NOT add labels. Do NOT add captions. Visual communication ONLY through drawings.';
+  prompt += ' Visual elements: yellow star burst, white cloud puffs showing force, red danger zone highlighting hazard. Flat colors, 2px black outlines, KOSHA cartoon style. Light gray background. ULTRA-CRITICAL FINAL INSTRUCTION: This image MUST be 100% TEXT-FREE like a universal safety pictogram or airport wayfinding icon. If ANY character, letter, number, or text-like mark appears (including Korean 한, Chinese 字, Japanese あ, English A, numbers 1), the image has COMPLETELY FAILED the requirement. Generate ONLY visual shapes, silhouettes, icons, arrows, and color coding. Think: How would you communicate this to someone who cannot read ANY language? Use only pictures and symbols.';
 
   // Ensure under 2048 chars
   if (prompt.length > 2040) {
@@ -186,7 +187,7 @@ export async function generateIllustration(
           ],
           generationConfig: {
             responseModalities: ['TEXT', 'IMAGE'], // MUST include TEXT with IMAGE for Gemini
-            temperature: 0.4, // Lower temperature for consistent safety illustrations
+            temperature: 0.1, // Ultra-low temperature for maximum consistency and NO TEXT artifacts
           },
         }),
       }
