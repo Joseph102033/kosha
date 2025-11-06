@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅, Law Matching Enhancement (2025-11-06) ✅, CORS Middleware Refactoring (2025-11-06) ✅
-- **Current Task**: Phase 1 refactoring (builder.tsx custom hooks separation remaining)
-- **Overall Progress**: 2/9 tasks completed + 8 major improvements + refactoring phase 1 (50%) (22% + enhancements)
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅, Law Matching Enhancement (2025-11-06) ✅, CORS Middleware Refactoring (2025-11-06) ✅, Builder.tsx Refactoring (2025-11-06) ✅
+- **Current Task**: Code refactoring complete! Ready for next feature development
+- **Overall Progress**: 2/9 tasks completed + 9 major improvements + refactoring phase 1 (100%) (22% + major refactoring complete)
 
 ---
 
@@ -1911,6 +1911,201 @@ return applyCors(
 - Phase 3: 에러 처리 일관성 개선
 
 **Relates to**: 2025-11-06 Code Refactoring Plan - Priority 1 (Critical Issues)
+
+---
+
+## ✅ 2025-11-06 Builder.tsx Refactoring (COMPLETED)
+
+### What Was Done:
+
+#### 1. Custom Hooks Extraction ✅
+**파일 생성**: 5개의 커스텀 훅
+
+**1.1 useAuth.ts (34 lines)**
+- 인증 상태 관리 (액세스 키)
+- 인증 모달 표시/숨김
+- 로컬 스토리지와 연동
+
+**1.2 useOPSForm.ts (36 lines)**
+- 폼 데이터 상태 관리
+- 입력 필드 변경 핸들러
+- 데모 샘플 로드 기능
+
+**1.3 useOPSPreview.ts (122 lines)**
+- 미리보기 생성 로직 (가장 복잡)
+- 상태 머신: idle → skeleton → dummy → generating → ready/error
+- 디바운스 타이머 관리 (1초)
+- API 호출 및 검증
+- 더미 데이터 폴백
+
+**1.4 useOPSPublish.ts (106 lines)**
+- 발행 상태 관리
+- 발행 핸들러 (검증 + API 호출)
+- URL 복사 기능
+- 401 인증 오류 처리
+
+**1.5 useEmailSend.ts (195 lines)**
+- 이메일 전송 상태 관리
+- 구독자 목록 로드 및 관리
+- 개별/전체 선택 토글
+- 이메일 발송 로직
+
+#### 2. Modal Components Extraction ✅
+**파일 생성**: 3개의 모달 컴포넌트
+
+**2.1 AuthModal.tsx (62 lines)**
+- 액세스 키 입력 모달
+- Enter 키 지원
+- 취소/저장 버튼
+- 로컬 스토리지 설명 텍스트
+
+**2.2 PublishSuccessModal.tsx (74 lines)**
+- 발행 성공 알림
+- 공개 URL 표시
+- 링크 복사 버튼
+- 이메일 공유 버튼 (관리자 전용)
+- 발행된 페이지 보기 링크
+
+**2.3 EmailSendModal.tsx (178 lines)**
+- 구독자 목록 체크박스
+- 전체 선택 기능
+- 수동 이메일 입력
+- 전송 상태 및 결과 표시
+- 에러 메시지 처리
+
+#### 3. Builder.tsx 리팩토링 ✅
+**파일 수정**: `apps/web/pages/builder.tsx`
+
+**변경 사항**:
+- **Before**: 828 lines (monolithic)
+- **After**: 332 lines (60% reduction)
+
+**제거된 코드**:
+- 15개의 useState 선언 → 5개 훅 호출로 대체
+- 2개의 useEffect 훅 → useOPSPreview에 통합
+- 10개의 이벤트 핸들러 함수 → 훅 메서드로 대체
+- 216줄의 모달 JSX → 3개 컴포넌트 호출로 대체
+
+**새 구조**:
+```typescript
+export default function Builder() {
+  // 5개 커스텀 훅으로 상태 관리
+  const auth = useAuth();
+  const form = useOPSForm();
+  const preview = useOPSPreview(form.formData, API_URL);
+  const publish = useOPSPublish(API_URL, () => auth.setShowAuthModal(true));
+  const email = useEmailSend(API_URL, () => auth.setShowAuthModal(true));
+
+  // JSX - 폼 + 미리보기 + 3개 모달 컴포넌트
+}
+```
+
+#### 4. Git Commit & Push ✅
+**커밋 정보**:
+- Commit: `a91d146`
+- Message: "Refactor builder.tsx with custom hooks and modal components"
+- Files changed: 9 files (+889 insertions, -578 deletions)
+- New files: 5 hooks + 3 modals
+
+**배포 정보**:
+- Push 시간: 2025-11-06 17:30 KST
+- GitHub Repository: https://github.com/Joseph102033/kosha
+- Next.js Build: ✅ 성공 (19.0s compile time)
+- Bundle Size: builder 페이지 24.2 kB
+
+### Technical Details:
+
+**개선 효과**:
+
+| 항목 | Before | After |
+|------|--------|-------|
+| builder.tsx 라인 수 | 828줄 | 332줄 (60% 감소) |
+| 파일 구조 | 1개 monolithic | 9개 분산 (1 + 5 + 3) |
+| 총 코드 라인 수 | 828줄 | 1,139줄 (+311줄) |
+| useState 선언 | 15개 | 0개 (훅으로 추상화) |
+| 모달 JSX | 216줄 인라인 | 3개 컴포넌트 |
+| 테스트 가능성 | ❌ 어려움 | ✅ 훅별 독립 테스트 |
+| 재사용성 | ❌ 없음 | ✅ 훅/모달 재사용 가능 |
+
+**코드 분포**:
+```
+Total: 1,139 lines
+├── builder.tsx: 332 lines (29%)
+├── Hooks: 493 lines (43%)
+│   ├── useAuth: 34 lines
+│   ├── useOPSForm: 36 lines
+│   ├── useOPSPreview: 122 lines (복잡도 높음)
+│   ├── useOPSPublish: 106 lines
+│   └── useEmailSend: 195 lines (복잡도 높음)
+└── Modals: 314 lines (28%)
+    ├── AuthModal: 62 lines
+    ├── PublishSuccessModal: 74 lines
+    └── EmailSendModal: 178 lines (복잡도 높음)
+```
+
+**타입 안정성**:
+- ✅ 모든 훅에 TypeScript 타입 정의
+- ✅ 모든 모달에 Props 인터페이스
+- ✅ 빌드 오류 0개
+- ✅ ESLint 경고만 존재 (기존 문제)
+
+**Breaking Changes**: 없음
+- 모든 기능 유지
+- UI/UX 변경 없음
+- API 호출 로직 동일
+
+### Benefits Achieved:
+
+**1. Single Responsibility Principle**
+- 각 훅은 하나의 관심사만 처리
+- 각 모달은 하나의 UI 기능만 담당
+
+**2. Reusability**
+- 모든 훅은 다른 페이지에서 재사용 가능
+- 모든 모달은 독립 컴포넌트로 재사용 가능
+
+**3. Testability**
+- 각 훅을 독립적으로 유닛 테스트 가능
+- 모달 컴포넌트는 비주얼 테스트 가능
+- 비즈니스 로직과 UI 분리
+
+**4. Maintainability**
+- 변경 사항이 특정 훅에만 영향
+- 버그 수정이 명확한 위치에서 가능
+- 코드 리뷰가 더 쉬워짐
+
+**5. Readability**
+- Builder 컴포넌트가 명확한 구조 표시
+- 각 파일이 200줄 미만으로 관리 가능
+- JSDoc 주석으로 문서화
+
+### Summary:
+
+**완료 항목**:
+1. ✅ Phase 1: 간단한 훅 추출 (useAuth, useOPSForm, AuthModal)
+2. ✅ Phase 2: 중간 복잡도 추출 (useOPSPublish, PublishSuccessModal)
+3. ✅ Phase 3: 복잡한 추출 (useOPSPreview, useEmailSend, EmailSendModal)
+4. ✅ builder.tsx 통합 및 테스트
+5. ✅ TypeScript 컴파일 검증
+6. ✅ Next.js 빌드 성공
+7. ✅ Git commit & push
+
+**배포 상태**:
+- ✅ 코드 백업 완료 (GitHub)
+- ✅ Next.js 빌드 통과
+- ⏳ 자동 배포 진행 중 (GitHub Actions)
+- ⏭️ 프로덕션 테스트 대기 중
+
+**다음 단계** (from 2025-11-06 Code Refactoring Plan):
+- Phase 1 완료: ✅ CORS 미들웨어 추가 + ✅ builder.tsx 리팩토링
+- Phase 2 (선택): 테스트 커버리지 개선
+- Phase 3 (선택): 에러 처리 일관성 개선
+
+**Project Health**: ⭐⭐⭐⭐☆ (좋음 - 2단계 개선)
+- Before: ⭐⭐⭐☆☆ (보통)
+- After refactoring: ⭐⭐⭐⭐☆ (좋음)
+
+**Relates to**: 2025-11-06 Code Refactoring Plan - Priority 1 완료
 
 ---
 
