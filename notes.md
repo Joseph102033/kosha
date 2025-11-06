@@ -8,9 +8,9 @@
 
 ## 🎯 Current Status
 
-- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅, Law Matching Enhancement (2025-11-06) ✅
-- **Current Task**: Testing improved law matching system
-- **Overall Progress**: 2/9 tasks completed + 7 major improvements + law matching optimization (22% + enhancements)
+- **Completed Tasks**: T-001 ✅, T-002 ✅, Major Updates (2025-10-10) ✅, Deployment (2025-10-11) ✅, Gemini Integration (2025-10-19) ✅, Frontend Illustration Display (2025-10-19) ✅, Korean Text Fix (2025-11-01) ✅, Law Matching Enhancement (2025-11-06) ✅, CORS Middleware Refactoring (2025-11-06) ✅
+- **Current Task**: Phase 1 refactoring (builder.tsx custom hooks separation remaining)
+- **Overall Progress**: 2/9 tasks completed + 8 major improvements + refactoring phase 1 (50%) (22% + enhancements)
 
 ---
 
@@ -1781,6 +1781,136 @@ console.log(`✅ Found ${results.length} laws, top 5 scores:`, ...);
 - 배포 완료 후 프로덕션 테스트
 - 법령 매칭 정확도 검증
 - 필요시 추가 개선
+
+---
+
+## ✅ 2025-11-06 CORS Middleware Refactoring (COMPLETED)
+
+### What Was Done:
+
+#### 1. CORS Middleware Creation ✅
+**파일 생성**: `apps/workers/src/middleware/cors.ts`
+
+**구현 내용**:
+- `applyCors()` function: 응답에 CORS 헤더 적용
+- `handleCorsPrelight()` function: OPTIONS preflight 요청 처리
+- CORS 헤더 구성:
+  - `Access-Control-Allow-Origin: *`
+  - `Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type, Authorization, X-Access-Key`
+
+**코드 구조**:
+```typescript
+export function applyCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    headers.set(key, value);
+  });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+```
+
+#### 2. index.ts 전체 리팩토링 ✅
+**파일 수정**: `apps/workers/src/index.ts`
+
+**변경 사항**:
+- 30+ 인라인 CORS 헤더 적용을 `applyCors()` 호출로 교체
+- 모든 API 엔드포인트에서 일관된 패턴 적용:
+  - `/api/subscribe` - 구독 처리
+  - `/api/subscribers` - 구독자 목록 (보호됨)
+  - `/api/ops/generate` - OPS 생성
+  - `/api/ops/save` - OPS 저장
+  - `/api/ops/:slug` - 공개 OPS 조회
+  - `/api/law/rules` - 법령 규칙 CRUD
+  - `/api/send` - 이메일 발송 (보호됨)
+  - `/api/analytics` - 분석 데이터
+  - `/api/laws/search` - 법령 검색
+  - `/api/laws/suggest` - 법령 제안
+  - `/api/laws/titles` - 법령 제목 목록
+  - `/api/laws/stats` - 법령 통계
+  - `/api/laws/rule-version` - 규칙 버전
+  - `/api/feedback/laws` - 법령 피드백
+  - 404 핸들러
+  - 500 에러 핸들러 (전역 catch)
+
+**리팩토링 전**:
+```typescript
+return new Response(JSON.stringify({...}), {
+  status: 200,
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+});
+```
+
+**리팩토링 후**:
+```typescript
+return applyCors(
+  new Response(JSON.stringify({...}), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+);
+```
+
+#### 3. Git Commit & Push ✅
+**커밋 정보**:
+- Commit: `1533433`
+- Message: "Refactor CORS handling with centralized middleware"
+- Files changed: 2 files (+318 insertions, -284 deletions)
+- New file: `apps/workers/src/middleware/cors.ts`
+
+**배포 정보**:
+- Push 시간: 2025-11-06 14:22 KST
+- GitHub Repository: https://github.com/Joseph102033/kosha
+- 자동 배포 진행 중 (GitHub Actions)
+
+### Technical Details:
+
+**개선 효과**:
+
+| 항목 | Before | After |
+|------|--------|-------|
+| CORS 중복 코드 | 30+ 인라인 적용 | ✅ 1개 함수로 통합 |
+| CORS 구성 위치 | index.ts 곳곳에 분산 | ✅ middleware/cors.ts에 중앙화 |
+| 유지보수성 | ❌ 어려움 (600줄 파일) | ✅ 개선됨 (중앙 관리) |
+| 일관성 | ❌ 패턴 혼재 | ✅ 일관된 패턴 |
+| X-Access-Key 지원 | ✅ 있음 | ✅ 유지 |
+
+**테스트 결과**:
+- ✅ TypeScript 컴파일 오류 없음 (index.ts, cors.ts)
+- ✅ 모든 corsHeaders 참조 제거 (0개 남음)
+- ✅ applyCors() 40회 사용 (import 포함)
+- ✅ 기존 기능 유지 (breaking changes 없음)
+
+**Breaking Changes**: 없음
+- 모든 HTTP 상태 코드 유지
+- JSON 응답 형식 유지
+- API 엔드포인트 URL 유지
+
+### Summary:
+
+**완료 항목**:
+1. ✅ CORS 미들웨어 생성 (middleware/cors.ts)
+2. ✅ index.ts 전체 리팩토링 (30+ 엔드포인트)
+3. ✅ TypeScript 타입 안정성 검증
+4. ✅ Git commit & push
+5. ✅ GitHub Actions 배포 트리거
+
+**배포 상태**:
+- ✅ 코드 백업 완료 (GitHub)
+- ⏳ 자동 배포 진행 중
+- ⏭️ 프로덕션 테스트 대기 중
+
+**다음 단계** (from 2025-11-06 Code Refactoring Plan):
+- Phase 1 완료: ✅ CORS 미들웨어 추가
+- Phase 1 남은 작업: builder.tsx 커스텀 훅 분리 (829줄 → 250줄)
+- Phase 2: 테스트 커버리지 개선
+- Phase 3: 에러 처리 일관성 개선
+
+**Relates to**: 2025-11-06 Code Refactoring Plan - Priority 1 (Critical Issues)
 
 ---
 
