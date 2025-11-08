@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node -e \"require('fs').cpSync('functions', 'out/functions', {recursive: true})\"",
     "preview": "npx serve out",
     "deploy": "npm run build && wrangler pages deploy out --project-name=kosha",
     "start": "next start",
