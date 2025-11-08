@@ -121,7 +121,42 @@ export function useEmailSend(apiUrl: string, onAuthRequired: () => void) {
     setEmailSendResult(null);
 
     try {
-      const fullUrl = `${window.location.origin}${publishedUrl}`;
+      // Validate and normalize the public URL
+      // Workers now returns frontend URL directly (e.g., https://kosha-8ad.pages.dev/p/...)
+      let fullUrl: string;
+
+      // Case 1: Absolute URL (starting with http:// or https://)
+      if (publishedUrl.startsWith('http://') || publishedUrl.startsWith('https://')) {
+        try {
+          // Validate URL format
+          const urlObj = new URL(publishedUrl);
+          fullUrl = publishedUrl;
+        } catch (e) {
+          // Invalid URL format, try to extract path and reconstruct
+          const pathMatch = publishedUrl.match(/\/p\/[a-z0-9-]+/);
+          if (pathMatch) {
+            fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || window.location.origin}${pathMatch[0]}`;
+          } else {
+            setEmailError('잘못된 URL 형식입니다');
+            return;
+          }
+        }
+      }
+      // Case 2: Relative path (starting with /)
+      else if (publishedUrl.startsWith('/')) {
+        fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || window.location.origin}${publishedUrl}`;
+      }
+      // Case 3: Invalid format (e.g., malformed URL like "https//...")
+      else {
+        // Try to extract path pattern and reconstruct
+        const pathMatch = publishedUrl.match(/\/p\/[a-z0-9-]+/);
+        if (pathMatch) {
+          fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || window.location.origin}${pathMatch[0]}`;
+        } else {
+          setEmailError('잘못된 URL 형식입니다');
+          return;
+        }
+      }
 
       const response = await fetchWithAuth(`${apiUrl}/api/send`, {
         method: 'POST',

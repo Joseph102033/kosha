@@ -83,7 +83,21 @@ export function useOPSPublish(apiUrl: string, onAuthRequired: () => void) {
 
   const copyPublicUrl = () => {
     if (publishedUrl) {
-      const fullUrl = `${window.location.origin}${publishedUrl}`;
+      // Workers now returns frontend URL directly
+      // Just validate and use it as-is
+      let fullUrl: string;
+
+      if (publishedUrl.startsWith('http://') || publishedUrl.startsWith('https://')) {
+        // Already an absolute URL, use as-is
+        fullUrl = publishedUrl;
+      } else if (publishedUrl.startsWith('/')) {
+        // Relative path, prepend origin
+        fullUrl = `${window.location.origin}${publishedUrl}`;
+      } else {
+        // Fallback: assume relative path
+        fullUrl = `${window.location.origin}/${publishedUrl}`;
+      }
+
       navigator.clipboard.writeText(fullUrl);
     }
   };

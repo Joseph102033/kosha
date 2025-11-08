@@ -55,7 +55,9 @@
       "Bash(test -f apps/workers/.dev.vars)",
       "WebFetch(domain:www.law.go.kr)",
       "Bash(pip install:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

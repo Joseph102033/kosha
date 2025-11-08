@@ -23,6 +23,7 @@ binding = "AI"
 [vars]
 # These are non-sensitive variables
 ENVIRONMENT = "development"
+FRONTEND_URL = "https://kosha-8ad.pages.dev"
 
 # For production secrets, use:
 # wrangler secret put ACCESS_KEY

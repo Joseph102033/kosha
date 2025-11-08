@@ -40,6 +40,7 @@ export interface Env {
   ACCESS_KEY?: string;
   EMAIL_API_KEY?: string;
   GEMINI_API_KEY?: string;
+  FRONTEND_URL?: string;
 }
 
 export default {

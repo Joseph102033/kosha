@@ -129,9 +129,10 @@ export async function handleSaveOPS(request: Request, env: Env): Promise<Respons
 
     await env.OPS_CACHE.put(`ops:${slug}`, kvValue);
 
-    // Public URL should point to Worker domain, not frontend
-    // Worker handles /p/:slug route with server-rendered HTML
-    const publicUrl = `https://safe-ops-studio-workers.yosep102033.workers.dev/p/${slug}`;
+    // Public URL should point to frontend domain for email sharing
+    // Frontend Pages will render the OPS document
+    const frontendUrl = env.FRONTEND_URL || 'https://kosha-8ad.pages.dev';
+    const publicUrl = `${frontendUrl}/p/${slug}`;
 
     return Response.json({
       success: true,

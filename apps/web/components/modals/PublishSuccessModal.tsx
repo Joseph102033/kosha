@@ -24,6 +24,25 @@ export default function PublishSuccessModal({
 }: PublishSuccessModalProps) {
   if (!publishedUrl) return null;
 
+  // Workers now returns frontend URL directly
+  // Just validate and use it
+  let displayUrl: string;
+  let linkUrl: string;
+
+  if (publishedUrl.startsWith('http://') || publishedUrl.startsWith('https://')) {
+    // Already an absolute URL, use as-is
+    displayUrl = publishedUrl;
+    linkUrl = publishedUrl;
+  } else if (publishedUrl.startsWith('/')) {
+    // Relative path, prepend origin
+    displayUrl = `${window.location.origin}${publishedUrl}`;
+    linkUrl = displayUrl;
+  } else {
+    // Fallback: assume relative path
+    displayUrl = `${window.location.origin}/${publishedUrl}`;
+    linkUrl = displayUrl;
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -33,7 +52,7 @@ export default function PublishSuccessModal({
         </p>
         <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
           <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">공개 URL:</p>
-          <p className="text-sm sm:text-base text-blue-600 break-all">{window.location.origin}{publishedUrl}</p>
+          <p className="text-sm sm:text-base text-blue-600 break-all">{displayUrl}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3">
           <button
@@ -43,7 +62,7 @@ export default function PublishSuccessModal({
             📋 링크 복사
           </button>
           <a
-            href={publishedUrl}
+            href={linkUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 active:bg-gray-400 transition-colors font-medium text-center text-base"
