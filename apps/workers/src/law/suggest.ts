@@ -240,22 +240,16 @@ function calculateRuleScore(
       const inputMatches = inputText.match(keywordRegex);
 
       if (lawMatches && inputMatches) {
-        // Both law and input contain this keyword
+        // Both law and input contain this keyword - HIGH relevance
         ruleScore += 1.0 * rule.weight;
         ruleMatches.push({
           type: 'keyword',
           pattern: keyword,
           matches: Array.from(new Set([...lawMatches, ...inputMatches])), // Deduplicate
         });
-      } else if (lawMatches) {
-        // Only law contains keyword (partial match)
-        ruleScore += 0.3 * rule.weight;
-        ruleMatches.push({
-          type: 'keyword',
-          pattern: keyword,
-          matches: lawMatches,
-        });
       }
+      // REMOVED: lawMatches-only case to reduce false positives
+      // Only score when keyword appears in BOTH law AND input
     }
 
     // Check regex matches
@@ -266,22 +260,16 @@ function calculateRuleScore(
         const inputMatches = inputText.match(regex);
 
         if (lawMatches && inputMatches) {
-          // Both law and input match this pattern
+          // Both law and input match this pattern - HIGH relevance
           ruleScore += 1.5 * rule.weight; // Regex matches score higher
           ruleMatches.push({
             type: 'regex',
             pattern: pattern,
             matches: Array.from(new Set([...lawMatches, ...inputMatches])),
           });
-        } else if (lawMatches) {
-          // Only law matches pattern
-          ruleScore += 0.5 * rule.weight;
-          ruleMatches.push({
-            type: 'regex',
-            pattern: pattern,
-            matches: lawMatches,
-          });
         }
+        // REMOVED: lawMatches-only case to reduce false positives
+        // Only score when pattern matches in BOTH law AND input
       } catch (e) {
         // Invalid regex, skip
         console.warn(`Invalid regex pattern: ${pattern}`, e);
