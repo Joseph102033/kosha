@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node -e \"require('fs').cpSync('functions', 'out/functions', {recursive: true})\"",
+    "build": "next build && node -e \"const fs=require('fs'); const path='out/p'; if(fs.existsSync(path)){fs.rmSync(path, {recursive:true}); console.log('Removed /p directory from build output');}\"",
     "preview": "npx serve out",
     "deploy": "npm run build && wrangler pages deploy out --project-name=kosha",
     "start": "next start",
