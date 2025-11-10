@@ -1,13 +1,7 @@
 {
   "version": 1,
   "include": [
-    "/",
-    "/builder",
-    "/analytics",
-    "/test-export",
-    "/illustration-demo",
-    "/admin/*",
-    "/_next/*"
+    "/*"
   ],
   "exclude": []
 }
