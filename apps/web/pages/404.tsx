@@ -18,6 +18,10 @@ export default function Custom404() {
     }
   }, [router]);
 
+  // Hide UI for /p/* and /api/* routes to prevent flash
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isProxiedRoute = path.startsWith('/p/') || path.startsWith('/api/');
+
   return (
     <>
       <Head>
@@ -30,7 +34,9 @@ export default function Custom404() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        opacity: isProxiedRoute ? 0 : 1,
+        transition: 'opacity 0.15s'
       }}>
         <h1 style={{
           display: 'inline-block',
