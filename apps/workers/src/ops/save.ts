@@ -129,10 +129,9 @@ export async function handleSaveOPS(request: Request, env: Env): Promise<Respons
 
     await env.OPS_CACHE.put(`ops:${slug}`, kvValue);
 
-    // Public URL should point to frontend domain for email sharing
-    // Frontend Pages will render the OPS document
-    const frontendUrl = env.FRONTEND_URL || 'https://kosha-8ad.pages.dev';
-    const publicUrl = `${frontendUrl}/p/${slug}`;
+    // Public URL points directly to Workers (server-side rendered)
+    // This avoids the Pages 404 flash issue
+    const publicUrl = `https://safe-ops-studio-workers.yosep102033.workers.dev/p/${slug}`;
 
     return Response.json({
       success: true,
