@@ -807,7 +807,7 @@ const response = await fetch(
 #### 3. 환경 변수 설정 ✅
 **파일 생성**: `apps/workers/.dev.vars`
 ```bash
-GEMINI_API_KEY=AIzaSyCR86W1Pes7SIIKhTQWEbB8YQ5_1jUIPtU
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 ```
 
 **파일 업데이트**: `.dev.vars.example`
@@ -1014,7 +1014,7 @@ touch seed-laws.ts
 #### 3. 배포 완료 내역
 ```bash
 # Wrangler Secrets 설정
-echo "AIzaSyCR86W1Pes7SIIKhTQWEbB8YQ5_1jUIPtU" | npx wrangler secret put GEMINI_API_KEY
+echo "YOUR_GEMINI_API_KEY_HERE" | npx wrangler secret put GEMINI_API_KEY
 # ✅ Success! Uploaded secret GEMINI_API_KEY
 
 # Workers 배포
