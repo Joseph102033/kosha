@@ -47,7 +47,7 @@ export default function Builder() {
                 onClick={() => auth.setShowAuthModal(true)}
                 className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap self-end sm:self-auto"
               >
-                {auth.hasAccessKey ? '🔑 키 변경' : '🔑 액세스 키 입력'}
+                {!auth.isMounted ? '🔑 액세스 키' : (auth.hasAccessKey ? '🔑 키 변경' : '🔑 액세스 키 입력')}
               </button>
             </div>
           </div>
