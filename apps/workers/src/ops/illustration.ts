@@ -164,10 +164,10 @@ export async function generateIllustration(
     const prompt = await generateImagePrompt(input, env);
     console.log('🎨 Generating illustration with Gemini 2.5 Flash Image...');
 
-    // Call Google Gemini 2.5 Flash Image API
-    // Model: gemini-2.0-flash-preview-image-generation
+    // Call Google Gemini 2.5 Flash Image API (Production Model)
+    // Model: gemini-2.5-flash-image (latest production model as of 2025)
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
       {
         method: 'POST',
         headers: {
@@ -200,6 +200,7 @@ export async function generateIllustration(
     }
 
     const result = await response.json();
+    console.log('📦 Gemini API response received:', { hasCandidates: !!result.candidates, candidatesLength: result.candidates?.length || 0 });
 
     // Extract image data from Gemini response
     // Response structure: { candidates: [{ content: { parts: [{ inlineData: { mimeType, data } }] } }] }
@@ -220,6 +221,7 @@ export async function generateIllustration(
       }
     }
 
+        console.error('❌ No image part found', { partsCount: candidate.content?.parts?.length });
     console.error('❌ No image found in Gemini response');
     return null;
   } catch (error) {
